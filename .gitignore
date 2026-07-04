@@ -25,3 +25,4 @@ bash.exe.stackdump
 
 # Recordings (large binaries, not source)
 .recordings/
+.claude/scheduled_tasks.lock
