@@ -1,0 +1,27 @@
+# Environment
+.env
+*.local
+
+# Backend (Maven/Java)
+backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Frontend (Angular/Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS / misc crash artifacts
+.DS_Store
+Thumbs.db
+bash.exe.stackdump
+
+# Recordings (large binaries, not source)
+.recordings/
