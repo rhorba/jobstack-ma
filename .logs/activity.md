@@ -81,3 +81,15 @@ db/migration/V1__initial_schema.sql added (6 tables + all planned indexes from d
 ## 2026-07-04 — Story 1.4 done: Docker Compose dev stack
 backend/Dockerfile (multi-stage, eclipse-temurin 25 jdk->jre, non-root, curl-based healthcheck), frontend/Dockerfile (node:22-slim build -> nginx:1.27-alpine), frontend/nginx.conf (SPA fallback + /api/ proxy to api:8080), root docker-compose.yml (nginx+api+db). Verified: docker compose build succeeded, `docker compose up -d` brought all 3 containers healthy, frontend reachable on localhost:8090 (HTTP 200), api reachable+healthy from nginx container over the internal network. Stack torn down after verification (docker compose down).
 Note: host ports 8080/8081/5432/4200/4201/5672/15672 are occupied by other local projects (darkom-ma, atlas-events) already running in Docker — chose 8090 for this project's nginx to avoid collision; no host ports published for api/db per architecture (internal network only).
+
+## 2026-07-05 — Story 1.5 done: CI pipeline green (after fixes)
+.github/workflows/ci.yml added: backend/frontend/security/build jobs. CI monitoring protocol (rule 11) followed through 5 red iterations, each diagnosed and fixed:
+1. mvnw missing +x bit (Windows checkout lost the exec bit) -> git update-index --chmod=+x
+2. Trivy severity YAML flow-mapping comma parsed as extra key -> quoted 'CRITICAL,HIGH'
+3. Trivy fs scan of pom.xml hit live Maven Central 429 (no local .m2 cache in a cold job) -> moved SCA scan into backend/frontend jobs (after deps already resolved)
+4. Real CVEs found in Spring Boot 3.5.0-managed Tomcat/Spring Security/Spring Core/Jackson -> bumped to Spring Boot 3.5.16
+5. Real CVE in eclipse-temurin's Ubuntu-based image (pebble binary, golang.org/x/net) + Alpine's p11-kit -> switched backend Dockerfile to -alpine base + apk upgrade
+Final run 28746846936: all 4 jobs (security, backend, frontend, build) green.
+
+## 2026-07-05 — MILESTONE: Sprint 1 shipped
+Foundation infrastructure complete and pushed to origin/master (commits ea3ef4d..7bc66a4). CI green. Video recording skipped per user instruction (final sprint only). Coverage gate not yet enforced per approved test-strategy doc (Story 8.3 turns it on).
