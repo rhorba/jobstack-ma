@@ -1,5 +1,10 @@
 <mat-toolbar color="primary">
   <span>{{ title() }}</span>
+  <span style="flex: 1 1 auto"></span>
+  @if (currentUser(); as user) {
+    <span style="margin-right: 12px">{{ user.role }}</span>
+    <button mat-button (click)="logout()">Log out</button>
+  }
 </mat-toolbar>
 
 <router-outlet />
