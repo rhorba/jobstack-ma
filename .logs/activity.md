@@ -93,3 +93,12 @@ Final run 28746846936: all 4 jobs (security, backend, frontend, build) green.
 
 ## 2026-07-05 — MILESTONE: Sprint 1 shipped
 Foundation infrastructure complete and pushed to origin/master (commits ea3ef4d..7bc66a4). CI green. Video recording skipped per user instruction (final sprint only). Coverage gate not yet enforced per approved test-strategy doc (Story 8.3 turns it on).
+
+## 2026-07-06 — Stories 2.1/2.2/2.3/2.5 backend done
+Auth backend complete: User entity/repo (Flyway V2 adds refresh_token_hash/expires_at to users), BCrypt password hashing, JwtService (jjwt, 15min HS256 access tokens, opaque SHA-256-hashed rotating refresh tokens in HttpOnly/Secure/SameSite=Strict cookie), JwtAuthenticationFilter, SecurityConfig (stateless, role-based path rules), AuthController (register/login/refresh/logout), AdminSeeder (ApplicationRunner, not a SQL migration — keeps bcrypt hashing consistent with the rest of the app, deviates from the DBA doc's illustrative migration name). Stub role-gated endpoints added for candidate/employer/admin to prove Story 2.4's authorization end-to-end.
+11 new integration tests (AuthFlowTests, Testcontainers Postgres) all pass: register/duplicate/admin-rejection, login success/wrong-password/unknown-email (same 401), refresh rotation + reuse-rejection (adversarial), logout+refresh-rejected, role cross-access 403, no-token 403, tampered-token 403.
+
+## 2026-07-06 — Story 2.4 frontend done, checkpoint pushed
+Frontend: AuthService (in-memory access token, silent session restore via APP_INITIALIZER + /auth/refresh), auth interceptor (Bearer header), roleGuard/authGuard, login/register Material forms, role-gated dashboard stubs (candidate/employer/admin) calling their backend stub endpoints. 3 new guard unit tests pass (5 total frontend tests green). Fixed a TS field-initializer-ordering bug (useDefineForClassFields + constructor-parameter properties) by switching to inject().
+Pushed commit f60ba70 to origin/master per user request to stop now.
+DEVIATION FROM RULE 11: CI triggered by this push has NOT been watched to green this session (user asked to end immediately). Next session's first action must be `gh run list` / `gh run view` to check status and fix if red before any other work.

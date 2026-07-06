@@ -22,3 +22,16 @@ Completed this session:
 - Local environment note: this machine already runs two other unrelated projects in Docker (darkom-ma, atlas-events) occupying ports 8080/8081/5432/4200/4201/5672/15672 — jobstack-ma's nginx uses 8090 to avoid collision.
 
 Next session: Start Sprint 2 (Epic 2: Authentication & Accounts) — stories 2.1-2.5 (register, login+JWT, refresh rotation, role guards, admin seed). No auth code written yet. Sprint backlog: docs/stories-jobstack.md. Remember Story 2.5 (admin seed) needs ADMIN_SEED_EMAIL/PASSWORD env vars already defined in .env.example.
+
+## SESSION_START — 2026-07-06
+Resuming JobStack.ma. Sprint 1 (foundation) complete and pushed (commit 4029e8e). Starting Sprint 2 (Epic 2: Authentication & Accounts) — stories 2.1-2.5.
+
+## SESSION_END — 2026-07-06
+Completed this session: Sprint 2 (Epic 2: Authentication) stories 2.1 (register), 2.2 (login+JWT), 2.3 (refresh rotation+logout), 2.5 (admin seed) fully done and tested (12 backend tests green). Story 2.4 (role guards) backend done+tested; frontend guards/auth service/login-register forms/dashboard stubs built and unit-tested (5 frontend tests green) but NOT yet verified end-to-end against the live stack (no docker-compose run this session for auth). Pushed commit f60ba70.
+NOT done: Sprint 2 VERIFY+SHIP (task #22) — no coverage report run, no CI watch-to-green (pushed but not monitored per user's explicit "end session now" request), no sprint metrics snapshot logged.
+Next session, in order:
+1. Check CI status on commit f60ba70 (gh run list/view) — diagnose and fix if red, this was never confirmed green.
+2. Optionally do a quick end-to-end manual check of Story 2.4 (docker-compose up, register+login as candidate, confirm dashboard loads, confirm /employer redirects away).
+3. Run coverage report, decide if it matters yet (test-strategy doc says the 80% gate is enforced starting Story 8.3, not now — just eyeball it).
+4. Log Sprint 2 SPRINT_SNAPSHOT to .logs/metrics.md and MILESTONE to activity.md, mark task #22 complete.
+5. Start Sprint 3 (Epic 3: Candidate Profile & CV) — stories 3.1-3.3.
