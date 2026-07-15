@@ -25,3 +25,11 @@ Coverage tooling: still not wired up — per docs/test-strategy-jobstack.md Stor
 Fixed this sprint: systemic bug where any `ResponseStatusException` surfaced as an empty 403 in the live stack (servlet error-dispatch re-entering the security filter chain on `/error`) — see issues.md.
 Known minor issue carried to backlog (unchanged): unauthenticated requests return 403 instead of 401.
 CI: green (run 29391919227, commit b842750) — all 4 jobs (backend, security, frontend, build) passed.
+
+## 2026-07-15 — Sprint 4 SPRINT_SNAPSHOT
+Sprint 4 (Epic 4: Job Posting & Search) complete.
+Stories: 4.1 employer/company registration, 4.2 create job posting (draft), 4.3 public job search/filter, 4.4 job search + detail screens (UI) — all done.
+Tests: backend 39/39 green (11 AuthFlowTests + 1 context load + 5 CandidateProfileTests + 6 CvUploadTests + 5 EmployerCompanyTests + 5 JobPostingTests + 6 JobSearchTests), frontend 19/19 green (5 test files: app smoke, auth guard, candidate profile screen, job search, job detail).
+Verified end-to-end against the live docker-compose stack: employer company creation, draft job posting creation, public search/filter (exact-match sector/city/contractType), job detail page, and all 4 Apply-CTA states (guest/wrong-role/missing-cv/ready) — all confirmed working live via Chrome. DRAFT postings confirmed not publicly visible.
+Coverage tooling: still not wired up — per docs/stories-jobstack.md Story 8.3 (Sprint 8) is when the CI coverage gate is introduced. Eyeballed only, consistent with Sprints 1-3.
+CI: not yet checked for this sprint's commit — pending push.

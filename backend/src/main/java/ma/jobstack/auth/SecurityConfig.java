@@ -2,6 +2,7 @@ package ma.jobstack.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -34,7 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/api/v1/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
+                        .requestMatchers("/api/v1/jobs/**").hasRole("EMPLOYER")
                         .requestMatchers("/api/v1/candidates/**").hasRole("CANDIDATE")
                         .requestMatchers("/api/v1/employers/**").hasRole("EMPLOYER")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

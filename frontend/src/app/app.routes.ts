@@ -2,11 +2,19 @@ import { Routes } from '@angular/router';
 import { roleGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '', pathMatch: 'full', redirectTo: 'jobs' },
   { path: 'login', loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent) },
   {
     path: 'register',
     loadComponent: () => import('./features/auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'jobs',
+    loadComponent: () => import('./features/job/job-search.component').then((m) => m.JobSearchComponent),
+  },
+  {
+    path: 'jobs/:id',
+    loadComponent: () => import('./features/job/job-detail.component').then((m) => m.JobDetailComponent),
   },
   {
     path: 'candidate',

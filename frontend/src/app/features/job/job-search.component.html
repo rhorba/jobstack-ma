@@ -1,0 +1,39 @@
+<div style="max-width: 720px; margin: 48px auto; padding: 0 16px;">
+  <h1>Find a job</h1>
+
+  <form [formGroup]="filters" (ngSubmit)="search()" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start;">
+    <mat-form-field>
+      <mat-label>Sector</mat-label>
+      <input matInput formControlName="sector" />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>City</mat-label>
+      <input matInput formControlName="city" />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Contract type</mat-label>
+      <input matInput formControlName="contractType" />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" style="margin-top: 8px;">Search</button>
+  </form>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p style="color: var(--mat-sys-error)">{{ error() }}</p>
+  } @else if (jobs().length === 0) {
+    <p>No jobs match your filters — try widening sector/city.</p>
+  } @else {
+    <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
+      @for (job of jobs(); track job.id) {
+        <li style="border: 1px solid var(--mat-sys-outline, #ccc); border-radius: 4px; padding: 12px;">
+          <a [routerLink]="['/jobs', job.id]" style="font-weight: 600; text-decoration: none;">{{ job.title }}</a>
+          <p style="margin: 4px 0 0;">{{ job.companyName }} · {{ job.city }} · {{ job.sector }}</p>
+        </li>
+      }
+    </ul>
+  }
+</div>

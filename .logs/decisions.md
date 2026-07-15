@@ -23,3 +23,7 @@ Identified during foundation phase: APP_BASE_URL, DB_NAME/USER/PASSWORD, JWT_SEC
 ## DECISION — 2026-07-06 — Sprint 3 approach: backend-first, one story at a time
 Chosen: implement Story 3.1 (profile CRUD) fully with tests, then 3.2 (CV upload) fully with tests, then 3.3 (frontend profile screen wiring both) — checkpointing after each, matching how Sprint 2 was executed.
 CV storage confirmed already decided in docs/architecture-jobstack.md / docs/devops-jobstack.md: dedicated Docker volume ("CV volume") mounted into the backend container, not S3/external object storage. No new decision needed for 3.2.
+
+## DECISION — 2026-07-15 — Sprint 4 approach + Story 4.3 search scope
+Chosen: same backend-first, one-story-at-a-time approach as Sprints 2-3 (4.1 -> 4.2 -> 4.3 -> 4.4, checkpointing after each).
+Story 4.3 (public job search): exact-match filters only (sector, city, contract_type) using the existing idx_job_postings_search index — no free-text search this sprint. Rejected alternatives: ILIKE title search and Postgres full-text search (tsvector/GIN), both premature at MVP scale (YAGNI). Revisit if users ask for free-text search once there's real posting volume.

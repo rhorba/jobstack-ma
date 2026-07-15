@@ -1,0 +1,28 @@
+<div style="max-width: 640px; margin: 48px auto; padding: 0 16px;">
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (notFound()) {
+    <p>This job posting could not be found.</p>
+  } @else if (job(); as j) {
+    <h1>{{ j.title }}</h1>
+    <p>{{ j.companyName }} · {{ j.city }} · {{ j.sector }} · {{ j.contractType }}</p>
+    <p style="white-space: pre-wrap;">{{ j.description }}</p>
+
+    @switch (applyState()) {
+      @case ('guest') {
+        <p>Log in as a candidate to apply.</p>
+        <a mat-flat-button color="primary" routerLink="/login">Log in to apply</a>
+      }
+      @case ('wrong-role') {
+        <button mat-flat-button disabled>Apply</button>
+      }
+      @case ('missing-cv') {
+        <p>Complete your profile and upload a CV before you can apply.</p>
+        <a mat-flat-button color="primary" routerLink="/candidate">Complete your profile</a>
+      }
+      @case ('ready') {
+        <button mat-flat-button color="primary">Apply</button>
+      }
+    }
+  }
+</div>
