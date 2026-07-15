@@ -170,3 +170,9 @@ Brainstorm decision: Story 4.3 search scope — user chose exact-match filters o
 - Backend suite: 39/39 green. Frontend suite: 19/19 green (5 test files).
 - Live verification via Chrome: registered an employer, created a company, created a DRAFT job posting through the real API, flipped it to LIVE directly in Postgres (payment flow that would normally do this is Sprint 5, not built yet), then confirmed live in-browser: job search screen lists the LIVE posting with company name; job detail page correctly shows all four Apply states (guest -> "Log in to apply", missing-cv -> "Complete your profile" prompt, ready -> enabled "Apply" button) by logging in as a candidate, completing the profile, and uploading a CV via the live stack; public GET endpoints confirmed still working for unauthenticated visitors; DRAFT postings confirmed NOT publicly visible (404). Chrome file_upload tool couldn't access the local scratchpad PDF in this sandboxed session, so the CV upload step for live verification was done via the real API instead of the UI file input — the UI file-input path itself was already verified live in Sprint 3 and is unchanged here. Docker stack torn down cleanly after verification.
 - Coverage tooling: still not wired up, per docs/stories-jobstack.md Story 8.3 (Sprint 8) — consistent with Sprints 1-3. Eyeballed: all tests green, no regressions.
+
+## 2026-07-15 — PUSH: Sprint 4 (Epic 4: Job Posting & Search)
+Committed and pushed commit d20afda to origin/master (26 files: Stories 4.1-4.4).
+
+## MILESTONE — 2026-07-15 — Sprint 4 VERIFY+SHIP closed out, CI green
+CI run 29406704110 confirmed green on commit d20afda: frontend, security, backend, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 4 (Epic 4: Job Posting & Search) fully shipped.

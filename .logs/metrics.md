@@ -32,4 +32,4 @@ Stories: 4.1 employer/company registration, 4.2 create job posting (draft), 4.3 
 Tests: backend 39/39 green (11 AuthFlowTests + 1 context load + 5 CandidateProfileTests + 6 CvUploadTests + 5 EmployerCompanyTests + 5 JobPostingTests + 6 JobSearchTests), frontend 19/19 green (5 test files: app smoke, auth guard, candidate profile screen, job search, job detail).
 Verified end-to-end against the live docker-compose stack: employer company creation, draft job posting creation, public search/filter (exact-match sector/city/contractType), job detail page, and all 4 Apply-CTA states (guest/wrong-role/missing-cv/ready) — all confirmed working live via Chrome. DRAFT postings confirmed not publicly visible.
 Coverage tooling: still not wired up — per docs/stories-jobstack.md Story 8.3 (Sprint 8) is when the CI coverage gate is introduced. Eyeballed only, consistent with Sprints 1-3.
-CI: not yet checked for this sprint's commit — pending push.
+CI: green (run 29406704110, commit d20afda) — all 4 jobs (frontend, security, backend, build) passed.
