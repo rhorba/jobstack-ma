@@ -97,3 +97,21 @@ Completed this session:
   - Committed (d20afda), pushed, CI confirmed green (run 29406704110). Sprint 4 snapshot logged to metrics.md.
 - Coverage tooling still not wired up — by design, Story 8.3 (Sprint 8) introduces the gate, consistent with all prior sprints.
 Next session: Start Sprint 5 (Epic 5: Payment/CMI) — stories 5.1-5.3. This is flagged Maximum rigor per test-strategy (payment + security). Will need CMI merchant credentials (CMI_MERCHANT_ID/STORE_KEY/API_URL/CALLBACK_URL) from the user before EXECUTE — these are placeholder-only in .env.example currently; real sandbox/test credentials should be collected at the start of that session per CLAUDE.md rule 10.
+
+## SESSION_END — 2026-07-15 (cont.)
+This was a continuation of the same 2026-07-15 session, past the SESSION_END entry above — the user asked to keep going into Sprint 5 instead of stopping.
+Completed this continuation:
+- Sprint 5 (Epic 5: Payment/CMI) fully executed and shipped end-to-end.
+- Key decision: user had no CMI merchant integration docs/sandbox credentials available. Rather than guess at CMI's real signature/API scheme for a Maximum-rigor payment flow, built the full payment state machine behind a `PaymentGateway` interface with a `MockPaymentGateway` implementation (HMAC-SHA256 over the already-collected `CMI_STORE_KEY`, clearly documented as a placeholder — see decisions.md, 2026-07-15 "Sprint 5 approach"). **This is the most important thing for next session to know**: real CMI integration is NOT done. `MockPaymentGateway` and the dev-only `POST /api/v1/payments/{id}/mock-outcome` endpoint must be replaced/removed once real CMI docs and sandbox credentials are available.
+- Story 5.1: Payment entity/repo, `POST /api/v1/jobs/:id/checkout` (employer owns posting, DRAFT-only, 409 if a payment already exists per the DB's `UNIQUE(job_posting_id)`).
+- Story 5.2 (Maximum rigor): `POST /api/v1/payments/cmi/callback` — signature verified before any state change, idempotent duplicate-callback handling, amount-tampering rejection, SUCCESS activates the job posting to LIVE (+30d expiry).
+- Story 5.3: employer "Post a Job" flow rebuilt in `employer-home.component` (company registration if missing -> job draft -> checkout -> mock CMI page -> success/failed+retry).
+- Backend 51/51 tests green (12 new), frontend 26/26 tests green (7 new).
+- Live-verified end-to-end via Chrome: full employer flow including a deliberate FAILED outcome + Retry, then SUCCESS, then confirmed the posting appears in public search. Had to log out of a leftover CANDIDATE session cookie from Sprint 4 testing first.
+- Committed (2e473a3), pushed, CI confirmed green (run 29440497158). Sprint 5 snapshot logged to metrics.md.
+- Known accepted gap (not a blocker, logged in activity.md): a true concurrent double-checkout race isn't unit-tested; the DB's UNIQUE(job_posting_id) constraint backs the safety property structurally regardless (a race would surface as a 500, not a clean 409).
+- Coverage tooling still not wired up — by design, Story 8.3 (Sprint 8), consistent with all prior sprints.
+Next session, in order:
+1. If real CMI merchant docs/sandbox credentials have become available, that's the natural point to replace MockPaymentGateway with a real CmiPaymentGateway (and delete the mock-outcome endpoint) before going further — ask the user.
+2. Otherwise, start Sprint 6 (Epic 6: Application Flow) — stories 6.1 (one-click apply, depends on 3.2 CV + 4.3 search, both done) and 6.2 (employer applicant dashboard). No new env vars expected.
+3. Local dev docker volumes still hold accumulated test data from Sprints 4-5 live verification (multiple LIVE "Automotive QA Engineer" postings etc.) — harmless for dev, but be aware when eyeballing search results live.
