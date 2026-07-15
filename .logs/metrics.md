@@ -24,4 +24,4 @@ Verified end-to-end against the live docker-compose stack: candidate profile GET
 Coverage tooling: still not wired up — per docs/test-strategy-jobstack.md Story 8.3 (Sprint 8) is when the CI coverage gate is introduced, consistent with Sprints 1-2. Eyeballed only.
 Fixed this sprint: systemic bug where any `ResponseStatusException` surfaced as an empty 403 in the live stack (servlet error-dispatch re-entering the security filter chain on `/error`) — see issues.md.
 Known minor issue carried to backlog (unchanged): unauthenticated requests return 403 instead of 401.
-CI: not yet checked for this sprint's commit — pending push.
+CI: green (run 29391919227, commit b842750) — all 4 jobs (backend, security, frontend, build) passed.

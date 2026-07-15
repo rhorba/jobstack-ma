@@ -151,3 +151,9 @@ Story 3.2 (CV upload) now considered fully verified end-to-end — this was the 
 - Live verification: Chrome extension wasn't connected this session, so used Playwright (playwright-core installed standalone in the session scratchpad, not added as a project dependency) driving Chromium against the rebuilt live docker stack — registered a fresh candidate, confirmed incomplete banner on load, filled+saved the form, uploaded a real PDF, confirmed the banner cleared and CV status updated, reloaded the page and confirmed both the saved fields and hasCv persisted. Screenshots captured confirming correct rendering at each step.
 - Docker stack torn down cleanly after verification.
 Story 3.3 (Epic 3, last story) done. Sprint 3 (Epic 3: Candidate Profile & CV) now feature-complete; next is Sprint 3 VERIFY+SHIP (full test suites already green from this session — re-run at SHIP time, log snapshot, commit, push).
+
+## 2026-07-15 — PUSH: Sprint 3 (Epic 3: Candidate Profile & CV)
+Committed and pushed commit b842750 to origin/master (24 files: Story 3.1 profile CRUD, Story 3.2 CV upload, Story 3.3 frontend profile screen, plus the SecurityConfig `/error` fix from the 403 investigation). User explicitly approved the commit+push after it was held over from the prior session.
+
+## MILESTONE — 2026-07-15 — Sprint 3 VERIFY+SHIP closed out, CI green
+CI run 29391919227 confirmed green on commit b842750: backend, security, frontend, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 3 (Epic 3: Candidate Profile & CV) fully shipped.
