@@ -33,3 +33,12 @@ Tests: backend 39/39 green (11 AuthFlowTests + 1 context load + 5 CandidateProfi
 Verified end-to-end against the live docker-compose stack: employer company creation, draft job posting creation, public search/filter (exact-match sector/city/contractType), job detail page, and all 4 Apply-CTA states (guest/wrong-role/missing-cv/ready) — all confirmed working live via Chrome. DRAFT postings confirmed not publicly visible.
 Coverage tooling: still not wired up — per docs/stories-jobstack.md Story 8.3 (Sprint 8) is when the CI coverage gate is introduced. Eyeballed only, consistent with Sprints 1-3.
 CI: green (run 29406704110, commit d20afda) — all 4 jobs (frontend, security, backend, build) passed.
+
+## 2026-07-15 — Sprint 5 SPRINT_SNAPSHOT
+Sprint 5 (Epic 5: Payment/CMI) complete — built against a MockPaymentGateway, not real CMI (see decisions.md; no CMI merchant docs/credentials available this session).
+Stories: 5.1 checkout initiation, 5.2 callback handling (Maximum rigor: signature verification, idempotency, amount-tampering rejection), 5.3 checkout + status UI — all done.
+Tests: backend 51/51 green (12 new PaymentFlowTests), frontend 26/26 green (7 new employer-home tests).
+Verified end-to-end against the live docker-compose stack: full employer flow (company -> draft job -> checkout -> failed+retry -> success) driven via Chrome, posting confirmed LIVE and publicly searchable afterward.
+Coverage tooling: still not wired up — per docs/stories-jobstack.md Story 8.3 (Sprint 8). Eyeballed only, consistent with Sprints 1-4.
+Known gap (accepted, logged): concurrent double-checkout race not unit-tested; DB UNIQUE(job_posting_id) constraint provides the underlying safety property regardless.
+CI: not yet checked for this sprint's commit — pending push.

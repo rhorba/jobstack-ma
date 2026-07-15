@@ -5,6 +5,8 @@ import ma.jobstack.employer.Company;
 import ma.jobstack.employer.CompanyRepository;
 import ma.jobstack.job.dto.CreateJobPostingRequest;
 import ma.jobstack.job.dto.JobPostingResponse;
+import ma.jobstack.payment.PaymentService;
+import ma.jobstack.payment.dto.CheckoutResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,10 +30,13 @@ public class JobController {
 
     private final CompanyRepository companyRepository;
     private final JobPostingRepository jobPostingRepository;
+    private final PaymentService paymentService;
 
-    public JobController(CompanyRepository companyRepository, JobPostingRepository jobPostingRepository) {
+    public JobController(CompanyRepository companyRepository, JobPostingRepository jobPostingRepository,
+                          PaymentService paymentService) {
         this.companyRepository = companyRepository;
         this.jobPostingRepository = jobPostingRepository;
+        this.paymentService = paymentService;
     }
 
     @PostMapping
@@ -44,6 +49,13 @@ public class JobController {
                 request.sector(), request.city(), request.contractType());
         jobPostingRepository.save(posting);
         return ResponseEntity.ok(toResponse(posting, company.getName()));
+    }
+
+    @PostMapping("/{id}/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(@AuthenticationPrincipal UUID userId, @PathVariable UUID id) {
+        PaymentService.CheckoutResult result = paymentService.checkout(id, userId);
+        return ResponseEntity.ok(new CheckoutResponse(result.paymentId().toString(), result.transactionId(),
+                result.redirectUrl(), result.amount()));
     }
 
     @GetMapping

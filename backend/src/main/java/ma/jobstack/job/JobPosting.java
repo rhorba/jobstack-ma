@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -98,5 +99,19 @@ public class JobPosting {
 
     public void setStatus(JobStatus status) {
         this.status = status;
+    }
+
+    public Instant getPublishedAt() {
+        return publishedAt;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void activate(Instant now, Duration liveDuration) {
+        this.status = JobStatus.LIVE;
+        this.publishedAt = now;
+        this.expiresAt = now.plus(liveDuration);
     }
 }

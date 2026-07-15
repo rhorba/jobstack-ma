@@ -1,0 +1,94 @@
+<div style="max-width: 480px; margin: 48px auto; padding: 0 16px;">
+  <h1>Employer dashboard</h1>
+  <p>Logged in as {{ email() }}</p>
+
+  @if (error()) {
+    <p style="color: var(--mat-sys-error)">{{ error() }}</p>
+  }
+
+  @switch (view()) {
+    @case ('loading') {
+      <p>Loading...</p>
+    }
+
+    @case ('company-form') {
+      <h2>Register your company</h2>
+      <form [formGroup]="companyForm" (ngSubmit)="saveCompany()" style="display: flex; flex-direction: column; gap: 8px;">
+        <mat-form-field>
+          <mat-label>Company name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Sector</mat-label>
+          <input matInput formControlName="sector" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" [disabled]="companyForm.invalid || submitting()">
+          {{ submitting() ? 'Saving...' : 'Save company' }}
+        </button>
+      </form>
+    }
+
+    @case ('job-form') {
+      <h2>Post a job</h2>
+      <form [formGroup]="jobForm" (ngSubmit)="saveJob()" style="display: flex; flex-direction: column; gap: 8px;">
+        <mat-form-field>
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Sector</mat-label>
+          <input matInput formControlName="sector" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Contract type</mat-label>
+          <input matInput formControlName="contractType" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="4"></textarea>
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" [disabled]="jobForm.invalid || submitting()">
+          {{ submitting() ? 'Saving...' : 'Continue' }}
+        </button>
+      </form>
+    }
+
+    @case ('ready-to-pay') {
+      <h2>{{ draftJob()?.title }}</h2>
+      <p>{{ draftJob()?.city }} · {{ draftJob()?.sector }} · {{ draftJob()?.contractType }}</p>
+      <button mat-flat-button color="primary" (click)="startCheckout()" [disabled]="submitting()">
+        {{ submitting() ? 'Redirecting to CMI...' : 'Continue to Payment — 490 MAD' }}
+      </button>
+    }
+
+    @case ('checkout') {
+      <h2>Confirm payment</h2>
+      <p>Amount: {{ checkoutSession()?.amount }} MAD</p>
+      <p style="display: flex; gap: 8px;">
+        <button mat-flat-button color="primary" (click)="completeCheckout('SUCCESS')" [disabled]="submitting()">
+          Pay (simulate success)
+        </button>
+        <button mat-stroked-button (click)="completeCheckout('FAILED')" [disabled]="submitting()">
+          Cancel (simulate failure)
+        </button>
+      </p>
+    }
+
+    @case ('success') {
+      <p>Your job is live for 30 days.</p>
+    }
+
+    @case ('failed') {
+      <p>Payment failed — try again.</p>
+      <button mat-flat-button color="primary" (click)="retry()">Retry</button>
+    }
+  }
+</div>

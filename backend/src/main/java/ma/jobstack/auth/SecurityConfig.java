@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/jobs/**").hasRole("EMPLOYER")
                         .requestMatchers("/api/v1/candidates/**").hasRole("CANDIDATE")
                         .requestMatchers("/api/v1/employers/**").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/payments/cmi/callback").permitAll()
+                        .requestMatchers("/api/v1/payments/**").hasRole("EMPLOYER")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
