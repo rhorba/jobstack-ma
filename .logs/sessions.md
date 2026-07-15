@@ -83,3 +83,17 @@ Next session, in order:
 2. If yes: stage, commit (Story 3.1-3.3 + the /error security fix), push to origin/master, then watch CI to green per rule 11 (fix-and-repush if red, do not leave this session without confirming green — last time this was skipped it required an explicit next-session check).
 3. Log the push to activity.md and update this file's snapshot with the CI run result.
 4. Then start Sprint 4 (Epic 4: Job Posting & Search) — stories 4.1+.
+
+## SESSION_END — 2026-07-15
+Completed this session:
+- Sprint 3 (Epic 3: Candidate Profile & CV), carried over uncommitted from last session: committed (b842750), pushed, CI confirmed green (run 29391919227). Fully shipped.
+- Sprint 4 (Epic 4: Job Posting & Search) fully executed and shipped end-to-end in this session:
+  - Story 4.1: employer company registration (POST/GET /api/v1/employers/me/company, one company per employer, 409 on duplicate).
+  - Story 4.2: create job posting draft (POST /api/v1/jobs, requires an owned company, creates DRAFT). SecurityConfig split so GET /api/v1/jobs/** stays public while POST requires EMPLOYER.
+  - Story 4.3: public job search/filter (GET /api/v1/jobs, GET /api/v1/jobs/:id), exact-match sector/city/contractType filters (user-confirmed scope choice, no free-text search this sprint), LIVE-only visibility, parameterized queries (adversarial SQL-injection test included).
+  - Story 4.4: Angular job-search + job-detail screens, 4-state Apply CTA (guest/wrong-role/missing-cv/ready). App root redirect changed from /login to /jobs per the approved UX IA (Home = job search).
+  - Backend 39/39 tests green, frontend 19/19 tests green.
+  - Live-verified end-to-end via Chrome against the rebuilt docker stack: employer company + draft job creation through the real API, flipped a posting to LIVE directly in Postgres (payment flow that would normally do this is Sprint 5, not built yet), then confirmed in-browser: search screen lists it correctly, detail page renders all 4 Apply-CTA states correctly (including logging in as a candidate, completing the profile, and uploading a CV live), DRAFT postings confirmed NOT publicly visible. Chrome's file_upload tool couldn't reach the local scratchpad file in this sandboxed session, so the CV-upload step of live verification used the real API instead of the UI file input; the UI file-input path itself was already verified live in Sprint 3 and is unchanged.
+  - Committed (d20afda), pushed, CI confirmed green (run 29406704110). Sprint 4 snapshot logged to metrics.md.
+- Coverage tooling still not wired up — by design, Story 8.3 (Sprint 8) introduces the gate, consistent with all prior sprints.
+Next session: Start Sprint 5 (Epic 5: Payment/CMI) — stories 5.1-5.3. This is flagged Maximum rigor per test-strategy (payment + security). Will need CMI merchant credentials (CMI_MERCHANT_ID/STORE_KEY/API_URL/CALLBACK_URL) from the user before EXECUTE — these are placeholder-only in .env.example currently; real sandbox/test credentials should be collected at the start of that session per CLAUDE.md rule 10.
