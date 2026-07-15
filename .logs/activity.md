@@ -185,3 +185,9 @@ Built behind a MockPaymentGateway per the session's up-front decision (see decis
 - Backend: 12 new tests (PaymentFlowTests), full suite 51/51 green. Frontend: 7 new tests (employer-home.component.spec.ts), full suite 26/26 green.
 - Live verification via Chrome against the rebuilt docker stack: registered a fresh employer, hit a leftover candidate session cookie from Sprint 4 testing (logged out first), then drove the full UI flow — company registration, job draft, checkout, a deliberate FAILED outcome (confirmed "Payment failed — try again" + Retry), Retry back to the mock checkout, then SUCCESS (confirmed "Your job is live for 30 days"), then confirmed the posting appears in public job search alongside the still-present LIVE posting from Sprint 4's test data (persisted DB volume, not wiped between sessions). Docker stack torn down cleanly after verification.
 - Coverage tooling: still not wired up, per docs/stories-jobstack.md Story 8.3 (Sprint 8) — consistent with all prior sprints. Eyeballed: all tests green, no regressions.
+
+## 2026-07-15 — PUSH: Sprint 5 (Epic 5: Payment/CMI, mock gateway)
+Committed and pushed commit 2e473a3 to origin/master (25 files: Stories 5.1-5.3).
+
+## MILESTONE — 2026-07-15 — Sprint 5 VERIFY+SHIP closed out, CI green
+CI run 29440497158 confirmed green on commit 2e473a3: backend, frontend, security, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 5 (Epic 5: Payment/CMI) fully shipped, mock gateway — real CMI integration deferred until merchant docs/credentials are available.

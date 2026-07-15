@@ -41,4 +41,4 @@ Tests: backend 51/51 green (12 new PaymentFlowTests), frontend 26/26 green (7 ne
 Verified end-to-end against the live docker-compose stack: full employer flow (company -> draft job -> checkout -> failed+retry -> success) driven via Chrome, posting confirmed LIVE and publicly searchable afterward.
 Coverage tooling: still not wired up — per docs/stories-jobstack.md Story 8.3 (Sprint 8). Eyeballed only, consistent with Sprints 1-4.
 Known gap (accepted, logged): concurrent double-checkout race not unit-tested; DB UNIQUE(job_posting_id) constraint provides the underlying safety property regardless.
-CI: not yet checked for this sprint's commit — pending push.
+CI: green (run 29440497158, commit 2e473a3) — all 4 jobs (backend, frontend, security, build) passed.
