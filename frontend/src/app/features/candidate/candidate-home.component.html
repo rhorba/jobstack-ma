@@ -1,0 +1,63 @@
+<div style="max-width: 480px; margin: 48px auto; padding: 0 16px;">
+  <h1>My profile</h1>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else {
+    @if (incomplete()) {
+      <p style="background: var(--mat-sys-error-container, #fdecea); color: var(--mat-sys-on-error-container, #611a15); padding: 12px; border-radius: 4px;">
+        Complete your profile and upload a CV before you can apply to jobs.
+      </p>
+    }
+
+    <p>Logged in as {{ profile()?.email }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="save()" style="display: flex; flex-direction: column; gap: 8px;">
+      <mat-form-field>
+        <mat-label>Full name</mat-label>
+        <input matInput formControlName="fullName" />
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Phone</mat-label>
+        <input matInput formControlName="phone" />
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Sector</mat-label>
+        <input matInput formControlName="sector" />
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" />
+      </mat-form-field>
+
+      @if (saveError()) {
+        <p style="color: var(--mat-sys-error)">{{ saveError() }}</p>
+      }
+      @if (saved()) {
+        <p>Profile saved.</p>
+      }
+
+      <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
+        {{ saving() ? 'Saving...' : 'Save profile' }}
+      </button>
+    </form>
+
+    <h2 style="margin-top: 24px;">CV</h2>
+    @if (profile()?.hasCv) {
+      <p>A CV is on file.</p>
+    } @else {
+      <p>No CV uploaded yet.</p>
+    }
+
+    <input type="file" accept="application/pdf" (change)="onCvSelected($event)" [disabled]="cvUploading()" />
+    @if (cvUploading()) {
+      <p>Uploading...</p>
+    }
+    @if (cvError()) {
+      <p style="color: var(--mat-sys-error)">{{ cvError() }}</p>
+    }
+  }
+</div>

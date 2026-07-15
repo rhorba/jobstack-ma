@@ -3,6 +3,8 @@ package ma.jobstack.auth;
 import ma.jobstack.auth.dto.AuthResponse;
 import ma.jobstack.auth.dto.LoginRequest;
 import ma.jobstack.auth.dto.RegisterRequest;
+import ma.jobstack.candidate.CandidateProfile;
+import ma.jobstack.candidate.CandidateProfileRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,11 +17,14 @@ import java.time.Instant;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final CandidateProfileRepository candidateProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UserRepository userRepository, CandidateProfileRepository candidateProfileRepository,
+                        PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
+        this.candidateProfileRepository = candidateProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -34,6 +39,9 @@ public class AuthService {
         }
         User user = new User(request.email(), passwordEncoder.encode(request.password()), request.role());
         userRepository.save(user);
+        if (request.role() == UserRole.CANDIDATE) {
+            candidateProfileRepository.save(new CandidateProfile(user.getId()));
+        }
     }
 
     public record LoginResult(AuthResponse response, String rawRefreshToken) {

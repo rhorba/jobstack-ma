@@ -35,3 +35,51 @@ Next session, in order:
 3. Run coverage report, decide if it matters yet (test-strategy doc says the 80% gate is enforced starting Story 8.3, not now — just eyeball it).
 4. Log Sprint 2 SPRINT_SNAPSHOT to .logs/metrics.md and MILESTONE to activity.md, mark task #22 complete.
 5. Start Sprint 3 (Epic 3: Candidate Profile & CV) — stories 3.1-3.3.
+
+## SESSION_START — 2026-07-06 (cont.)
+Resuming JobStack.ma. Last session ended after Sprint 2 EXECUTE but before VERIFY+SHIP (task #22 open). Picking up: check CI on f60ba70, optionally verify Story 2.4 e2e, run coverage, log Sprint 2 snapshot, then start Sprint 3 (Epic 3: Candidate Profile & CV).
+
+## SESSION_END — 2026-07-06 (cont.)
+Completed this session:
+- Sprint 2 VERIFY+SHIP fully closed out: CI confirmed green on f60ba70, Story 2.4 role guards verified end-to-end against the live stack (backend authorization layer — register/login/role-scoped access all correct), backend 12/12 + frontend 5/5 green, Sprint 2 snapshot logged to metrics.md, minor 401-vs-403 convention issue logged as backlog (not blocking).
+- Sprint 3 (Epic 3: Candidate Profile & CV) started:
+  - Story 3.1 (profile view/edit): Flyway V3 (full_name nullable), CandidateProfile entity+repo, auto-created on candidate registration, GET/PUT /api/v1/candidates/me. Backend tests 5/5 green.
+  - Story 3.2 (CV upload): Dockerfile+compose CV volume (/data/cvs), POST/GET /api/v1/candidates/me/cv with magic-byte PDF validation, 5MB limit, server-derived filename (no path traversal), ownership-scoped via "me". Backend tests 6/6 green.
+  - Full backend suite: 23/23 green (verified via MockMvc + Testcontainers).
+  - Fixed a self-introduced bug along the way: a test-scoped application.properties shadowed the main config and broke all tests (logged in issues.md), root-caused and fixed by scoping the override via @TestPropertySource instead.
+- NOT done: Story 3.3 (frontend profile screen) not started. Sprint 3 not yet verified/shipped.
+- Local .env created for dev docker-compose runs (gitignored, not committed) with placeholder dev values.
+OPEN ISSUE (must resolve next session before Sprint 3 ships): live docker-stack smoke test of GET /api/v1/candidates/me returns 403 for a pre-existing test user, not reproduced by the automated test suite. Full detail and investigation plan in issues.md (2026-07-06 entry). Leading theory: that user (candidate1@test.ma) was registered before Story 3.1's auto-profile-creation existed, so has no candidate_profiles row, and the resulting 404 may be getting intercepted/translated to 403 somewhere in the security filter chain — needs `docker compose logs api` to confirm the real exception.
+All work is uncommitted (git status: several modified + new files, see below) — nothing pushed this session since Sprint 3 isn't complete. Docker stack stopped cleanly (`docker compose down`, volumes preserved).
+Next session, in order:
+1. Investigate and fix the 403 issue above (check api container logs, retest with a fresh candidate registered under current code).
+2. Finish Story 3.2 verification once the above is resolved.
+3. Story 3.3 (frontend candidate profile screen + CV upload UI + incomplete-profile prompt).
+4. Sprint 3 VERIFY+SHIP: run both test suites, log snapshot, commit, push.
+
+## SESSION_START — 2026-07-06 (cont. 2)
+Resuming JobStack.ma. Picking up open issue: 403 on live-stack candidate profile endpoint.
+
+## Progress this session
+Root-caused and fixed the open 403 issue (see issues.md and activity.md FIX entry) — it was a systemic Spring Security + servlet error-dispatch bug (`/error` re-entering the security filter chain on `DispatcherType.ERROR`), not specific to the candidate profile endpoint. Fixed via one-line `SecurityConfig` change (`permitAll` on `/error`). Verified end-to-end against the live docker stack through nginx: register/login error paths return correct codes, candidate profile GET/PUT/CV-upload/CV-download all confirmed working, cross-role denial still correct. Backend suite 23/23 green after the fix. Stack torn down cleanly.
+Story 3.2 (CV upload) is now fully verified — this was the last open blocker from last session.
+Next, in order: Story 3.3 (frontend candidate profile screen + CV upload UI + incomplete-profile prompt), then Sprint 3 VERIFY+SHIP (run both test suites, log snapshot, commit, push).
+
+## SESSION_END — 2026-07-06 (cont. 2)
+Completed this session:
+- Root-caused and fixed the open 403 bug from last session (see issues.md/activity.md FIX entry): any `ResponseStatusException` was surfacing as an empty 403 in the live stack due to `/error` re-entering the Spring Security filter chain on `DispatcherType.ERROR`. One-line fix in `SecurityConfig` (`permitAll` on `/error`). Verified end-to-end against the rebuilt live stack.
+- Story 3.2 (CV upload) now fully verified end-to-end (was the last blocker carried in from last session).
+- Story 3.3 (candidate profile screen UI) built and shipped-in-code: backend `hasCv` field added to `CandidateProfileResponse`; frontend `candidate-home.component.ts/html` rebuilt as the real profile screen (form + CV upload + incomplete-profile banner per UX Flow 1); `candidate-profile.model.ts` added.
+- Tests: backend 23/23 green, frontend 11/11 green (3 test files).
+- Live UI verification done via Playwright (Chrome extension was unavailable this session) — installed `playwright-core` standalone in the session scratchpad only, NOT added to frontend package.json/project dependencies. Drove the full flow against the live docker-compose stack: incomplete banner on fresh registration, form save, CV upload, banner clearing, reload persistence — all confirmed with screenshots.
+- Sprint 3 (Epic 3: Candidate Profile & CV) is feature-complete. Sprint 3 SPRINT_SNAPSHOT logged to metrics.md.
+- Docker stack brought up/down cleanly multiple times during investigation and verification; always torn down after use.
+NOT done / explicitly deferred: commit and push. Per CLAUDE.md rule 7, a sprint-end push is expected, but per the standing "never commit without explicit user ask" rule I asked the user for go-ahead; the user ended the session before answering, so **all of this session's work (Sprint 3 code + the SecurityConfig fix) is uncommitted** — see git status below. Do not lose this.
+Uncommitted changes at session end:
+- Modified: .logs/*, backend/Dockerfile, backend/src/main/java/ma/jobstack/auth/AuthService.java, backend/src/main/java/ma/jobstack/auth/SecurityConfig.java (the /error fix), backend/src/main/java/ma/jobstack/candidate/CandidateController.java, backend/src/main/resources/application.properties, docker-compose.yml, frontend/src/app/features/candidate/candidate-home.component.ts
+- New/untracked: backend candidate profile+CV classes and dto/ (CandidateProfile, CandidateProfileRepository, CvStorageService, CvUploadExceptionHandler), backend/src/main/resources/db/migration/V3__candidate_profile_full_name_nullable.sql, backend/src/test/java/ma/jobstack/candidate/ (CandidateProfileTests, CvUploadTests), frontend candidate-home.component.html/.spec.ts, candidate-profile.model.ts
+Next session, in order:
+1. Ask user whether to commit + push Sprint 3 now (this was the exact point the session ended on).
+2. If yes: stage, commit (Story 3.1-3.3 + the /error security fix), push to origin/master, then watch CI to green per rule 11 (fix-and-repush if red, do not leave this session without confirming green — last time this was skipped it required an explicit next-session check).
+3. Log the push to activity.md and update this file's snapshot with the CI run result.
+4. Then start Sprint 4 (Epic 4: Job Posting & Search) — stories 4.1+.

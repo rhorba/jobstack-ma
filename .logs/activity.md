@@ -102,3 +102,52 @@ Auth backend complete: User entity/repo (Flyway V2 adds refresh_token_hash/expir
 Frontend: AuthService (in-memory access token, silent session restore via APP_INITIALIZER + /auth/refresh), auth interceptor (Bearer header), roleGuard/authGuard, login/register Material forms, role-gated dashboard stubs (candidate/employer/admin) calling their backend stub endpoints. 3 new guard unit tests pass (5 total frontend tests green). Fixed a TS field-initializer-ordering bug (useDefineForClassFields + constructor-parameter properties) by switching to inject().
 Pushed commit f60ba70 to origin/master per user request to stop now.
 DEVIATION FROM RULE 11: CI triggered by this push has NOT been watched to green this session (user asked to end immediately). Next session's first action must be `gh run list` / `gh run view` to check status and fix if red before any other work.
+
+## MILESTONE — 2026-07-06 — Sprint 2 VERIFY+SHIP closed out
+- CI confirmed green on commit f60ba70 (run 28770777990, 3m34s) and on f60ba70's follow-up checkpoint commit 6dfe615 (run 28770868624).
+- Story 2.4 role guards verified end-to-end against the live docker-compose stack (backend authorization layer): register candidate -> login -> JWT role claim correct -> GET /api/v1/candidates/me 200 -> GET /api/v1/employers/me 403 -> GET /api/v1/admin/ping 403 for candidate token, 200 for admin-seed token -> unauthenticated request 403 (see issues.md for 401-vs-403 note). Frontend UI flow not driven interactively (browser extension unavailable this session); frontend route guards remain covered by unit tests only.
+- Local dev pgdata volume was stale (old password from a prior session); reset via `docker compose down -v` + `up -d --build`, re-seeded clean.
+- Backend test suite: 12/12 green (AuthFlowTests 11, BackendApplicationTests 1).
+- Frontend test suite: 5/5 green (2 test files).
+- No coverage tooling (jacoco/istanbul) wired up yet — by design, per docs/stories-jobstack.md Story 8.3 (Sprint 8) is when the CI coverage gate is introduced. Eyeballed: all existing tests green, no regressions.
+- Sprint 2 (Epic 2: Authentication & Accounts) considered fully shipped as of this entry.
+
+## PLAN — 2026-07-06 — Story 3.1 (candidate profile view/edit)
+Batch:
+  1. Flyway V3: relax candidate_profiles.full_name to nullable (profile is completed after registration per docs/ux-jobstack.md flow, not at registration).
+  2. AuthService.register: auto-create empty candidate_profiles row when role=CANDIDATE.
+  3. CandidateProfile JPA entity + repository.
+  4. GET /api/v1/candidates/me returns full_name, phone, sector, city.
+  5. PUT /api/v1/candidates/me updates those fields with validation.
+  6. Tests: profile auto-created on candidate registration, GET/PUT happy paths, validation errors.
+
+## TASK — 2026-07-06 — Story 3.1 (candidate profile view/edit) backend done
+- Flyway V3: candidate_profiles.full_name made nullable (profile completed after registration, not at registration).
+- AuthService.register now auto-creates an empty CandidateProfile row for role=CANDIDATE.
+- Added CandidateProfile entity, CandidateProfileRepository.
+- CandidateController: GET /api/v1/candidates/me and PUT /api/v1/candidates/me (fullName/phone/sector/city, validated against DB column sizes).
+- Tests: 5 new (CandidateProfileTests) covering profile-created-on-register, GET/PUT happy path, validation rejection (fullName > 200 chars -> 400), unauthenticated rejection, cross-role rejection (employer token blocked from /candidates/me).
+- Full backend suite: 17/17 green (11 AuthFlowTests + 1 context load + 5 CandidateProfileTests).
+- Frontend for 3.1 not yet touched (deferred to Story 3.3 per plan).
+Next: Story 3.2 (CV upload).
+
+## PLAN — 2026-07-06 — Story 3.2 (CV upload)
+Batch:
+  1. Dockerfile: create /data/cvs owned by app user; docker-compose.yml: new cvdata named volume mounted there.
+  2. application.properties: cv.storage.path (default /data/cvs), multipart max file size config.
+  3. POST /api/v1/candidates/me/cv (multipart): validate magic bytes (%PDF), size <=5MB, store as {userId}.pdf, update candidate_profiles.cv_path.
+  4. GET /api/v1/candidates/me/cv: ownership-checked download (candidate's own JWT only).
+  5. Tests: valid PDF accepted, non-PDF with .pdf extension rejected (magic-byte check), oversized file rejected, download requires auth, cross-role/cross-user access blocked.
+
+## FIX — 2026-07-06 — Root cause found and fixed: ResponseStatusException surfacing as empty 403 in live stack
+Investigated the open issue from last session (403 on GET /api/v1/candidates/me). Brought up the docker-compose stack, reproduced directly against the api container (bypassing nginx to rule it out): duplicate-email register, wrong-password login, and self-register-as-ADMIN all incorrectly returned 403 instead of their real status (409/401/400) — proving this was never specific to the candidate profile endpoint. Root cause: `ResponseStatusException` triggers a servlet error-dispatch to `/error`; Spring Boot's security auto-config re-runs the `SecurityFilterChain` on that `DispatcherType.ERROR` dispatch; `/error` wasn't in the `permitAll` list so it fell to `anyRequest().authenticated()`, and with no custom `AuthenticationEntryPoint` the default `Http403ForbiddenEntryPoint` overwrote the real status with an empty 403. Fix: added `.requestMatchers("/error").permitAll()` in `SecurityConfig`. Full detail in issues.md.
+Verified end-to-end against the rebuilt live stack (through nginx on 8090): register/duplicate/admin-blocked/login/wrong-password all return correct codes now; GET/PUT `/api/v1/candidates/me` 200; cross-role access still correctly denied (403); CV upload (200) and download (200, correct PDF bytes returned) both verified. Backend suite re-run: 23/23 green, no regressions. Docker stack torn down cleanly after verification (`docker compose down`).
+Story 3.2 (CV upload) now considered fully verified end-to-end — this was the last blocker noted at the end of last session.
+
+## TASK — 2026-07-06 — Story 3.3 done: Candidate profile screen (UI)
+- Backend: added `hasCv` boolean to `CandidateProfileResponse` (derived from `cvPath != null`) so the frontend can detect a missing CV, not just missing text fields. 1 new assertion in CandidateProfileTests, 1 in CvUploadTests. Backend suite: 23/23 green.
+- Frontend: `candidate-home.component.ts/html` rebuilt as the real profile screen — reactive form (fullName/phone/sector/city) wired to GET/PUT `/api/v1/candidates/me`, file input wired to POST `/api/v1/candidates/me/cv`, incomplete-profile banner ("Complete your profile and upload a CV before you can apply to jobs") shown whenever any field or the CV is missing, per docs/ux-jobstack.md Flow 1. New `candidate-profile.model.ts` for the response shape.
+- Frontend tests: 7 new (candidate-home.component.spec.ts) — load/populate, incomplete flagged, complete not flagged, save via PUT, CV upload clears incomplete flag, upload error surfaced. Full frontend suite: 11/11 green (3 test files).
+- Live verification: Chrome extension wasn't connected this session, so used Playwright (playwright-core installed standalone in the session scratchpad, not added as a project dependency) driving Chromium against the rebuilt live docker stack — registered a fresh candidate, confirmed incomplete banner on load, filled+saved the form, uploaded a real PDF, confirmed the banner cleared and CV status updated, reloaded the page and confirmed both the saved fields and hasCv persisted. Screenshots captured confirming correct rendering at each step.
+- Docker stack torn down cleanly after verification.
+Story 3.3 (Epic 3, last story) done. Sprint 3 (Epic 3: Candidate Profile & CV) now feature-complete; next is Sprint 3 VERIFY+SHIP (full test suites already green from this session — re-run at SHIP time, log snapshot, commit, push).

@@ -12,6 +12,8 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: "5432"
+    volumes:
+      - cvdata:/data/cvs
     depends_on:
       db:
         condition: service_healthy
@@ -32,3 +34,4 @@ services:
 
 volumes:
   pgdata:
+  cvdata:

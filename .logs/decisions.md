@@ -19,3 +19,7 @@ ADR-1 layered/package-by-feature, ADR-2 Spring Boot on Java 25 LTS, ADR-3 Angula
 
 ## 2026-07-04 — Env vars collected
 Identified during foundation phase: APP_BASE_URL, DB_NAME/USER/PASSWORD, JWT_SECRET, ADMIN_SEED_EMAIL/PASSWORD, CMI_MERCHANT_ID/STORE_KEY/API_URL/CALLBACK_URL, SMTP_HOST/PORT/USERNAME/PASSWORD/FROM_ADDRESS, POSTHOG_API_KEY/HOST. Written to .env.example with placeholders per user choice (real secrets to be filled in a local, gitignored .env whenever CMI/SMTP accounts are ready).
+
+## DECISION — 2026-07-06 — Sprint 3 approach: backend-first, one story at a time
+Chosen: implement Story 3.1 (profile CRUD) fully with tests, then 3.2 (CV upload) fully with tests, then 3.3 (frontend profile screen wiring both) — checkpointing after each, matching how Sprint 2 was executed.
+CV storage confirmed already decided in docs/architecture-jobstack.md / docs/devops-jobstack.md: dedicated Docker volume ("CV volume") mounted into the backend container, not S3/external object storage. No new decision needed for 3.2.

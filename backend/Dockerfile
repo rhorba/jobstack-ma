@@ -9,7 +9,8 @@ RUN ./mvnw package -q -DskipTests
 FROM eclipse-temurin:25-jre-alpine
 RUN apk upgrade --no-cache \
     && apk add --no-cache curl \
-    && addgroup -S app && adduser -S -G app app
+    && addgroup -S app && adduser -S -G app app \
+    && mkdir -p /data/cvs && chown app:app /data/cvs
 WORKDIR /app
 COPY --from=builder --chown=app:app /app/target/*.jar app.jar
 USER app
