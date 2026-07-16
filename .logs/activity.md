@@ -212,3 +212,6 @@ No new migration needed (applications table already in V1__initial_schema.sql); 
 - Story 6.2: new applicant-dashboard.component (route employer/jobs/:id/applicants, guarded EMPLOYER) lists name/email/phone per applicant with a CV download action (fetched as a blob via HttpClient so the auth interceptor's Bearer token applies — a plain anchor href would bypass it). Linked from employer-home's 'success' state ("View applicants"). New applicant.model.ts. 3 new tests.
 - employer-home.component gained RouterLink import (template now links to the applicant dashboard); its spec updated with provideRouter([]).
 - Frontend suite: 31/31 green (7 test files), no regressions.
+
+## 2026-07-16 — PUSH: Sprint 6 (Epic 6: Application Flow)
+Committed and pushed commit c220f9b to origin/master (26 files: Stories 6.1-6.2, application module, security config, employer/job controller endpoints, frontend apply wiring + applicant dashboard).
