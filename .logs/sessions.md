@@ -118,3 +118,17 @@ Next session, in order:
 
 ## SESSION_START — 2026-07-16
 Resuming JobStack.ma. Last session ended with Sprint 5 (Epic 5: Payment/CMI, mock gateway) shipped and CI-green (commit 2e473a3, run 29440497158). Asked user: swap in real CMI now, or start Sprint 6? User chose Sprint 6 (Epic 6: Application Flow).
+
+## SESSION_END — 2026-07-16
+Completed this session:
+- Resumed from Sprint 5 close-out; user chose to proceed with Sprint 6 (Epic 6: Application Flow) over swapping in a real CMI gateway (no new credentials available).
+- Sprint 6 fully executed and shipped end-to-end:
+  - Story 6.1: one-click apply — new `application` package (Application entity/repo/ApplicationStatus, ApplicationService), `POST /api/v1/jobs/:id/apply` (candidate-only via a SecurityConfig matcher added ahead of the general EMPLOYER-only `/api/v1/jobs/**` rule), requires job LIVE + complete profile+CV (mirrors the Sprint 3 frontend "incomplete" check), duplicate apply blocked via the existing DB unique constraint -> 409.
+  - Story 6.2: employer applicant dashboard — `GET /api/v1/employers/me/jobs/:id/applicants` and a CV-download endpoint, both IDOR-checked (must own the job; CV download also requires that candidate to actually be an applicant for it).
+  - Frontend: job-detail Apply button wired to the endpoint (applying/applied/applyError states, 409 mapped to a clear message); new `applicant-dashboard.component` (route `employer/jobs/:id/applicants`) listing name/email/phone with a blob-fetched CV download button (plain anchor href would've bypassed the auth interceptor); linked from employer-home's success state.
+  - Backend 62/62 tests green (11 new), frontend 31/31 green (5 new across 2 files).
+  - Live-verified end-to-end via Chrome against the rebuilt docker stack: candidate apply flow (profile completion, CV upload via API since Chrome's file_upload tool again couldn't reach the scratchpad PDF — known limitation from Sprints 3-4 — everything downstream driven live through the UI), Apply -> "Application submitted.", employer applicant dashboard showing correct details, CV download (200, correct auth-gated blob fetch), and the IDOR block confirmed live (a second, unrelated employer got 403 + a friendly UI error, no data leak). Docker stack torn down cleanly.
+  - Committed (c220f9b), pushed, CI confirmed green (run 29526698821). Two follow-up log-only commits (593ed4f, 138bc6d) also pushed and CI-confirmed green. Sprint 6 snapshot logged to metrics.md.
+- Coverage tooling still not wired up — by design, Story 8.3 (Sprint 8), consistent with all prior sprints.
+- Updated the cross-session memory file (jobstack-sprint-status) to reflect Sprints 1-6 shipped.
+Next session: Start Sprint 7 (Epic 7: Admin Moderation & Notifications) — stories 7.1 (admin moderation queue), 7.2 (admin account suspension), 7.3, 7.4 (metrics, transactional email) per docs/stories-jobstack.md. If real CMI merchant docs/credentials have become available, that's the natural point to swap out MockPaymentGateway first — ask the user. Transactional email (7.4) will need new env vars (SMTP/email provider credentials) — collect those upfront per CLAUDE.md rule 10 before that story's EXECUTE phase.
