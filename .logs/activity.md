@@ -215,3 +215,6 @@ No new migration needed (applications table already in V1__initial_schema.sql); 
 
 ## 2026-07-16 — PUSH: Sprint 6 (Epic 6: Application Flow)
 Committed and pushed commit c220f9b to origin/master (26 files: Stories 6.1-6.2, application module, security config, employer/job controller endpoints, frontend apply wiring + applicant dashboard).
+
+## MILESTONE — 2026-07-16 — Sprint 6 VERIFY+SHIP closed out, CI green
+CI run 29526698821 confirmed green on commit c220f9b: backend, security, frontend, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 6 (Epic 6: Application Flow) fully shipped.

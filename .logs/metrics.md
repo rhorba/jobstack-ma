@@ -42,3 +42,11 @@ Verified end-to-end against the live docker-compose stack: full employer flow (c
 Coverage tooling: still not wired up — per docs/stories-jobstack.md Story 8.3 (Sprint 8). Eyeballed only, consistent with Sprints 1-4.
 Known gap (accepted, logged): concurrent double-checkout race not unit-tested; DB UNIQUE(job_posting_id) constraint provides the underlying safety property regardless.
 CI: green (run 29440497158, commit 2e473a3) — all 4 jobs (backend, frontend, security, build) passed.
+
+## SPRINT_SNAPSHOT — Sprint 6 (Epic 6: Application Flow) — 2026-07-16
+- Stories: 6.1 (one-click apply), 6.2 (employer applicant dashboard) — both done.
+- Backend tests: 62/62 green (11 new in ApplicationFlowTests.java).
+- Frontend tests: 31/31 green (2 new in job-detail.component.spec.ts, 3 new in applicant-dashboard.component.spec.ts).
+- Coverage tooling: still not wired up, per docs/stories-jobstack.md Story 8.3 (Sprint 8) — consistent with all prior sprints. Eyeballed: all tests green, no regressions.
+- Commit c220f9b pushed to origin/master; CI run 29526698821 green.
+- Live-verified via Chrome: full candidate apply flow, employer applicant dashboard + CV download, and IDOR block (second employer denied 403) all confirmed working end-to-end.
