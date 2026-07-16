@@ -28,6 +28,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/employer/employer-home.component').then((m) => m.EmployerHomeComponent),
   },
   {
+    path: 'employer/jobs/:id/applicants',
+    canActivate: [roleGuard('EMPLOYER')],
+    loadComponent: () =>
+      import('./features/employer/applicant-dashboard.component').then((m) => m.ApplicantDashboardComponent),
+  },
+  {
     path: 'admin',
     canActivate: [roleGuard('ADMIN')],
     loadComponent: () => import('./features/admin/admin-home.component').then((m) => m.AdminHomeComponent),

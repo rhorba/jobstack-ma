@@ -96,6 +96,48 @@ describe('JobDetailComponent', () => {
     expect(component.applyState()).toBe('ready');
   });
 
+  it('submits an application and flags applied on success', () => {
+    auth.currentUser.set({ role: 'CANDIDATE' });
+    fixture.detectChanges();
+    httpMock.expectOne(`/api/v1/jobs/${job.id}`).flush(job);
+    httpMock.expectOne('/api/v1/candidates/me').flush({
+      email: 'c@test.ma',
+      role: 'CANDIDATE',
+      fullName: 'A',
+      phone: '0600000000',
+      sector: 'IT',
+      city: 'Rabat',
+      hasCv: true,
+    });
+
+    component.apply();
+    httpMock.expectOne(`/api/v1/jobs/${job.id}/apply`).flush({});
+
+    expect(component.applied()).toBe(true);
+    expect(component.applying()).toBe(false);
+  });
+
+  it('surfaces a clear message when applying twice (409 already applied)', () => {
+    auth.currentUser.set({ role: 'CANDIDATE' });
+    fixture.detectChanges();
+    httpMock.expectOne(`/api/v1/jobs/${job.id}`).flush(job);
+    httpMock.expectOne('/api/v1/candidates/me').flush({
+      email: 'c@test.ma',
+      role: 'CANDIDATE',
+      fullName: 'A',
+      phone: '0600000000',
+      sector: 'IT',
+      city: 'Rabat',
+      hasCv: true,
+    });
+
+    component.apply();
+    httpMock.expectOne(`/api/v1/jobs/${job.id}/apply`).flush('already applied', { status: 409, statusText: 'Conflict' });
+
+    expect(component.applied()).toBe(false);
+    expect(component.applyError()).toBe('You have already applied to this job.');
+  });
+
   it('flags notFound when the job fails to load', () => {
     fixture.detectChanges();
     httpMock.expectOne(`/api/v1/jobs/${job.id}`).flush('not found', { status: 404, statusText: 'Not Found' });

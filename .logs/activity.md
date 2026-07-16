@@ -191,3 +191,24 @@ Committed and pushed commit 2e473a3 to origin/master (25 files: Stories 5.1-5.3)
 
 ## MILESTONE — 2026-07-15 — Sprint 5 VERIFY+SHIP closed out, CI green
 CI run 29440497158 confirmed green on commit 2e473a3: backend, frontend, security, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 5 (Epic 5: Payment/CMI) fully shipped, mock gateway — real CMI integration deferred until merchant docs/credentials are available.
+
+## 2026-07-16 — PLAN: Sprint 6 (Epic 6: Application Flow)
+Batch 1 (backend 6.1): Application entity/repo, POST /api/v1/jobs/:id/apply (candidate-only, complete-profile+CV required, job must be LIVE, unique(job_posting_id, candidate_profile_id) -> 409 on duplicate).
+Batch 2 (frontend 6.1): wire existing job-detail 'ready' Apply button to the endpoint; success/already-applied UI state.
+Batch 3 (backend 6.2): GET /api/v1/employers/me/jobs/:id/applicants, IDOR-checked (employer must own the posting's company) per test-strategy §4.
+Batch 4 (frontend 6.2): new applicant-dashboard component (name/contact/CV link), linked from employer-home.
+Batch 5: VERIFY (full test suites + live Chrome verification of apply flow, duplicate/missing-CV blocks, IDOR block).
+Batch 6: SHIP (commit, push, CI green, snapshot).
+No new migration needed (applications table already in V1__initial_schema.sql); no new env vars.
+
+## 2026-07-16 — EXECUTE: Sprint 6 backend (Stories 6.1 + 6.2) done
+- New `application` package: Application entity/repo/ApplicationStatus, ApplicationService (apply/listApplicants/downloadApplicantCv), DTOs (ApplicationResponse, ApplicantResponse). No new migration (applications table already existed from V1).
+- Story 6.1: POST /api/v1/jobs/:id/apply — candidate-only (SecurityConfig matcher added ahead of the general EMPLOYER-only /api/v1/jobs/** rule), job must be LIVE (404 otherwise), profile must be complete (fullName/phone/sector/city + CV, mirroring the Sprint 3 frontend "incomplete" check) else 409, duplicate apply blocked via existsByJobPostingIdAndCandidateProfileId -> 409.
+- Story 6.2: GET /api/v1/employers/me/jobs/:id/applicants (IDOR-checked via assertOwnedByEmployer, same pattern as PaymentService) returns fullName/email/phone/cvDownloadUrl; GET /api/v1/employers/me/jobs/:id/applicants/:candidateProfileId/cv also IDOR-checked (must own the job AND that candidate must actually be an applicant for it — reuses CvStorageService.load keyed by the candidate's userId, no path traversal).
+- Tests: new ApplicationFlowTests.java, 11 tests (apply happy path, missing-CV 409, duplicate 409, non-LIVE job 404, wrong-role 403, applicant list happy path, IDOR 403 on list, empty list, CV download happy path, IDOR 403 on CV download, 404 for a candidate-profile-id that never applied). Full backend suite: 62/62 green, no regressions.
+
+## 2026-07-16 — EXECUTE: Sprint 6 frontend (Stories 6.1 + 6.2) done
+- Story 6.1: job-detail.component wired to POST /api/v1/jobs/:id/apply from the existing 'ready' Apply button — applying/applied/applyError signals, 409 mapped to a clear "already applied" message. 2 new tests.
+- Story 6.2: new applicant-dashboard.component (route employer/jobs/:id/applicants, guarded EMPLOYER) lists name/email/phone per applicant with a CV download action (fetched as a blob via HttpClient so the auth interceptor's Bearer token applies — a plain anchor href would bypass it). Linked from employer-home's 'success' state ("View applicants"). New applicant.model.ts. 3 new tests.
+- employer-home.component gained RouterLink import (template now links to the applicant dashboard); its spec updated with provideRouter([]).
+- Frontend suite: 31/31 green (7 test files), no regressions.

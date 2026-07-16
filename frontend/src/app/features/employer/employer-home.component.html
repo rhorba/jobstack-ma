@@ -84,6 +84,7 @@
 
     @case ('success') {
       <p>Your job is live for 30 days.</p>
+      <a mat-stroked-button [routerLink]="['/employer/jobs', draftJob()?.id, 'applicants']">View applicants</a>
     }
 
     @case ('failed') {

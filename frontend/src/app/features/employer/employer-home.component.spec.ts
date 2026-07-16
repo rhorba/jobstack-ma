@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { EmployerHomeComponent } from './employer-home.component';
 import { Company } from './company.model';
 import { JobPosting } from '../job/job-posting.model';
@@ -25,7 +26,7 @@ describe('EmployerHomeComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [EmployerHomeComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     fixture = TestBed.createComponent(EmployerHomeComponent);
     component = fixture.componentInstance;

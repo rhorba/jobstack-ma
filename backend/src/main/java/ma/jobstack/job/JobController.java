@@ -1,6 +1,9 @@
 package ma.jobstack.job;
 
 import jakarta.validation.Valid;
+import ma.jobstack.application.Application;
+import ma.jobstack.application.ApplicationService;
+import ma.jobstack.application.dto.ApplicationResponse;
 import ma.jobstack.employer.Company;
 import ma.jobstack.employer.CompanyRepository;
 import ma.jobstack.job.dto.CreateJobPostingRequest;
@@ -31,12 +34,14 @@ public class JobController {
     private final CompanyRepository companyRepository;
     private final JobPostingRepository jobPostingRepository;
     private final PaymentService paymentService;
+    private final ApplicationService applicationService;
 
     public JobController(CompanyRepository companyRepository, JobPostingRepository jobPostingRepository,
-                          PaymentService paymentService) {
+                          PaymentService paymentService, ApplicationService applicationService) {
         this.companyRepository = companyRepository;
         this.jobPostingRepository = jobPostingRepository;
         this.paymentService = paymentService;
+        this.applicationService = applicationService;
     }
 
     @PostMapping
@@ -56,6 +61,13 @@ public class JobController {
         PaymentService.CheckoutResult result = paymentService.checkout(id, userId);
         return ResponseEntity.ok(new CheckoutResponse(result.paymentId().toString(), result.transactionId(),
                 result.redirectUrl(), result.amount()));
+    }
+
+    @PostMapping("/{id}/apply")
+    public ResponseEntity<ApplicationResponse> apply(@AuthenticationPrincipal UUID userId, @PathVariable UUID id) {
+        Application application = applicationService.apply(id, userId);
+        return ResponseEntity.ok(new ApplicationResponse(application.getId().toString(),
+                application.getJobPostingId().toString(), application.getStatus().name()));
     }
 
     @GetMapping

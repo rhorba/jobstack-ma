@@ -21,7 +21,16 @@
         <a mat-flat-button color="primary" routerLink="/candidate">Complete your profile</a>
       }
       @case ('ready') {
-        <button mat-flat-button color="primary">Apply</button>
+        @if (applyError()) {
+          <p style="color: var(--mat-sys-error)">{{ applyError() }}</p>
+        }
+        @if (applied()) {
+          <p>Application submitted.</p>
+        } @else {
+          <button mat-flat-button color="primary" (click)="apply()" [disabled]="applying()">
+            {{ applying() ? 'Applying...' : 'Apply' }}
+          </button>
+        }
       }
     }
   }

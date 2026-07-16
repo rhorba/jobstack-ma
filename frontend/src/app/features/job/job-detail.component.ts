@@ -23,6 +23,9 @@ export class JobDetailComponent implements OnInit {
   readonly loading = signal(true);
   readonly notFound = signal(false);
   readonly hasCv = signal(false);
+  readonly applying = signal(false);
+  readonly applied = signal(false);
+  readonly applyError = signal<string | null>(null);
 
   readonly applyState = computed<ApplyState>(() => {
     const user = this.auth.currentUser();
@@ -47,5 +50,25 @@ export class JobDetailComponent implements OnInit {
     if (this.auth.hasRole('CANDIDATE')) {
       this.http.get<CandidateProfile>('/api/v1/candidates/me').subscribe((profile) => this.hasCv.set(profile.hasCv));
     }
+  }
+
+  apply(): void {
+    const job = this.job();
+    if (!job) return;
+    this.applying.set(true);
+    this.applyError.set(null);
+
+    this.http.post(`/api/v1/jobs/${job.id}/apply`, {}).subscribe({
+      next: () => {
+        this.applying.set(false);
+        this.applied.set(true);
+      },
+      error: (err) => {
+        this.applying.set(false);
+        this.applyError.set(
+          err.status === 409 ? 'You have already applied to this job.' : 'Could not submit your application. Please try again.',
+        );
+      },
+    });
   }
 }

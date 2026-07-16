@@ -115,3 +115,6 @@ Next session, in order:
 1. If real CMI merchant docs/sandbox credentials have become available, that's the natural point to replace MockPaymentGateway with a real CmiPaymentGateway (and delete the mock-outcome endpoint) before going further — ask the user.
 2. Otherwise, start Sprint 6 (Epic 6: Application Flow) — stories 6.1 (one-click apply, depends on 3.2 CV + 4.3 search, both done) and 6.2 (employer applicant dashboard). No new env vars expected.
 3. Local dev docker volumes still hold accumulated test data from Sprints 4-5 live verification (multiple LIVE "Automotive QA Engineer" postings etc.) — harmless for dev, but be aware when eyeballing search results live.
+
+## SESSION_START — 2026-07-16
+Resuming JobStack.ma. Last session ended with Sprint 5 (Epic 5: Payment/CMI, mock gateway) shipped and CI-green (commit 2e473a3, run 29440497158). Asked user: swap in real CMI now, or start Sprint 6? User chose Sprint 6 (Epic 6: Application Flow).

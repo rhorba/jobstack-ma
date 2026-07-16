@@ -1,0 +1,20 @@
+<div style="max-width: 640px; margin: 48px auto; padding: 0 16px;">
+  <a routerLink="/employer">&larr; Back to dashboard</a>
+  <h1>Applicants</h1>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p style="color: var(--mat-sys-error)">{{ error() }}</p>
+  } @else if (applicants().length === 0) {
+    <p>No applicants yet.</p>
+  } @else {
+    @for (applicant of applicants(); track applicant.applicationId) {
+      <div style="border-bottom: 1px solid var(--mat-sys-outline-variant); padding: 12px 0;">
+        <p><strong>{{ applicant.fullName }}</strong></p>
+        <p>{{ applicant.email }} · {{ applicant.phone }}</p>
+        <button mat-stroked-button (click)="downloadCv(applicant)">Download CV</button>
+      </div>
+    }
+  }
+</div>

@@ -18,3 +18,12 @@ Actual mechanism: `ResponseStatusException` resolution goes through a servlet-co
 Fix: added `.requestMatchers("/error").permitAll()` to `SecurityConfig`'s `authorizeHttpRequests` chain (first rule, before the other permitAll matchers).
 Verified against the rebuilt live stack: fresh register 200, duplicate register 409, wrong-password login 401, self-register-as-ADMIN 400, GET/PUT `/api/v1/candidates/me` 200, cross-role access still correctly 403, CV upload/download 200/200. Full backend suite still 23/23 green after the fix.
 Not fixed (separate, pre-existing, still backlog): unauthenticated (no-token) requests still return 403 instead of 401, per the other entry above — that needs an actual custom `AuthenticationEntryPoint`, distinct from this bug.
+
+## 2026-07-16 — VERIFY: Sprint 6 (Epic 6: Application Flow) live-verified, no product issues found
+Full backend suite 62/62 green, frontend suite 31/31 green (see activity.md EXECUTE entries). Live end-to-end via Chrome against the rebuilt docker stack (nginx:8090):
+- Registered a fresh employer, company, job draft -> checkout -> mock SUCCESS -> job LIVE -> "View applicants" link renders and shows the new empty-state dashboard.
+- Registered a fresh candidate; completed profile (fullName/phone/sector/city) and uploaded a CV — Chrome's file_upload tool rejected the scratchpad PDF path in this sandboxed session (same known limitation as Sprints 3-4), so the CV upload step used the real API directly; the profile PUT and everything downstream was driven live through the UI.
+- Confirmed 'ready' Apply state renders correctly once profile+CV complete; clicked Apply -> "Application submitted." live.
+- Confirmed as the owning employer: applicant dashboard lists the candidate's name/email/phone and a working "Download CV" button (verified 200 response, correct auth-gated blob fetch, not a plain anchor href).
+- Confirmed IDOR block live: registered a second, unrelated employer and hit the same applicants URL directly — got the correct 403 from the API and a friendly "Could not load applicants for this job posting." message in the UI (no data leak).
+No regressions, no new issues found. Docker stack torn down cleanly after verification.
