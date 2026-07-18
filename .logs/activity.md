@@ -209,6 +209,9 @@ Brought up the docker-compose stack (Docker Desktop had to be started first — 
 Docker stack torn down cleanly (`docker compose down`) after verification.
 Mid-session note: the user's internet connection dropped twice during this verification pass, which also restarted Docker Desktop (all containers on the machine, not just this project's, exited) — recovered each time by restarting Docker Desktop / `docker compose up -d` and re-confirming the API was healthy before continuing. No data or code was lost; the moderation/suspension actions taken before each drop persisted correctly in the DB.
 
+## FIX — 2026-07-19 — CI red on Sprint 7 push, root-caused and fixed
+Commit 26d1a7e's CI run (29665329426) went red on the `backend` job: `NotificationTriggerTests.apply_sendsApplicationSubmittedEmail` threw `UncheckedIOException: Unable to store CV file`. Root cause: `NotificationTriggerTests` was missing the `@TestPropertySource(properties = "cv.storage.path=target/test-cvs")` annotation that its sibling test classes (`CvUploadTests`, `ApplicationFlowTests`) both have — it fell back to the default `/data/cvs`, which isn't writable by the non-root CI runner user on Linux. Passed locally on Windows only because `Path.of("/data/cvs")` resolves to a writable path there, masking the bug. Fix: added the same `@TestPropertySource` override. Re-ran full backend suite locally (83/83 green) before repushing.
+
 ## 2026-07-16 — PLAN: Sprint 6 (Epic 6: Application Flow)
 Batch 1 (backend 6.1): Application entity/repo, POST /api/v1/jobs/:id/apply (candidate-only, complete-profile+CV required, job must be LIVE, unique(job_posting_id, candidate_profile_id) -> 409 on duplicate).
 Batch 2 (frontend 6.1): wire existing job-detail 'ready' Apply button to the endpoint; success/already-applied UI state.
