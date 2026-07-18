@@ -1,0 +1,33 @@
+<div style="max-width: 720px; margin: 48px auto; padding: 0 16px;">
+  <a routerLink="/admin">&larr; Back to admin dashboard</a>
+  <h1>Platform metrics</h1>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p style="color: var(--mat-sys-error)">{{ error() }}</p>
+  } @else if (metrics(); as m) {
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px;">
+      <div style="border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; padding: 16px;">
+        <p style="margin: 0 0 4px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem;">Total postings</p>
+        <p style="margin: 0; font-weight: 600; font-size: 1.75rem; color: var(--mat-sys-on-surface);">{{ m.totalPostings }}</p>
+      </div>
+      <div style="border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; padding: 16px;">
+        <p style="margin: 0 0 4px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem;">Live postings</p>
+        <p style="margin: 0; font-weight: 600; font-size: 1.75rem; color: var(--mat-sys-on-surface);">{{ m.liveJobPostings }}</p>
+      </div>
+      <div style="border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; padding: 16px;">
+        <p style="margin: 0 0 4px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem;">Total applications</p>
+        <p style="margin: 0; font-weight: 600; font-size: 1.75rem; color: var(--mat-sys-on-surface);">{{ m.totalApplications }}</p>
+      </div>
+      <div style="border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; padding: 16px;">
+        <p style="margin: 0 0 4px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem;">Confirmed payments</p>
+        <p style="margin: 0; font-weight: 600; font-size: 1.75rem; color: var(--mat-sys-on-surface);">{{ m.confirmedPayments }}</p>
+      </div>
+      <div style="border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; padding: 16px;">
+        <p style="margin: 0 0 4px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem;">Confirmed revenue</p>
+        <p style="margin: 0; font-weight: 600; font-size: 1.75rem; color: var(--mat-sys-on-surface);">{{ m.confirmedRevenueMad }} MAD</p>
+      </div>
+    </div>
+  }
+</div>

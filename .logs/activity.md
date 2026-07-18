@@ -192,6 +192,23 @@ Committed and pushed commit 2e473a3 to origin/master (25 files: Stories 5.1-5.3)
 ## MILESTONE — 2026-07-15 — Sprint 5 VERIFY+SHIP closed out, CI green
 CI run 29440497158 confirmed green on commit 2e473a3: backend, frontend, security, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 5 (Epic 5: Payment/CMI) fully shipped, mock gateway — real CMI integration deferred until merchant docs/credentials are available.
 
+## 2026-07-17/18 — EXECUTE: Sprint 7 (Epic 7: Admin Moderation & Notifications) done
+- Story 7.1: `moderation_actions` audit table (Flyway V4), `AdminModerationService` (listQueue returns PENDING_PAYMENT/LIVE postings), `POST /api/v1/admin/postings/:id/moderate` (approve leaves LIVE, reject sets REJECTED+reason, remove sets REMOVED — all audit-logged with admin user id/reason/timestamp). Frontend `moderation-queue.component` (approve/reject/remove buttons).
+- Story 7.2: `AdminUserService.setStatus`, `PUT /api/v1/admin/users/:id/status` (ACTIVE/SUSPENDED). `JwtAuthenticationFilter`/login path rejects suspended users (401, generic message — no status leak, consistent with the existing 401-vs-403 auth convention). Frontend `admin-users.component` (raw user-ID input, no listing UI — YAGNI, matches the story's literal AC).
+- Story 7.3: `AdminMetricsService` (total/live postings, total applications, confirmed payments count+revenue), `GET /api/v1/admin/metrics`. Frontend `admin-metrics.component` (stat tiles).
+- Story 7.4: `notification` package — `NotificationService` (welcome/application-submitted/posting-rejected/posting-expiry-soon templates), `SmtpEmailService` (JavaMailSender, failures logged not thrown), `AsyncConfig` (dedicated thread pool so SMTP latency never blocks request threads), `JobExpiryNotifier` (scheduled scan for postings expiring soon). Triggered from AuthService.register, ApplicationService.apply, AdminModerationService.moderate(reject). Flyway V5 adds the expiry-notice-sent tracking column.
+- Backend: 83/83 tests green, 21 new (2 AdminMetricsTests, 8 AdminModerationTests, 5 AdminUserSuspensionTests, 4 NotificationTriggerTests, 2 SmtpEmailServiceTests). Frontend: 40/40 green, 9 new across 3 admin component spec files (moderation-queue, admin-users, admin-metrics).
+- SMTP_PASSWORD remains a placeholder in `.env.example`/`.env` (user hasn't generated a Gmail App Password yet) — email-send failures are expected in this environment and are exactly what Story 7.4's AC requires to be logged, not swallowed; unit-tested independently of real credentials (SmtpEmailServiceTests mocks JavaMailSender for both the success and failure paths).
+
+## VERIFY — 2026-07-18/19 — Sprint 7 live-verified end-to-end
+Brought up the docker-compose stack (Docker Desktop had to be started first — wasn't running at session start). Verified via Chrome against the live stack, logged in as the seeded admin:
+- Moderation queue: Approve on a LIVE posting (stayed LIVE, action logged to `moderation_actions`), Remove on a LIVE posting (status -> REMOVED, public `GET /api/v1/jobs/:id` for it now 404s — confirmed no leak). Reject already verified in a prior part of this session (REJECTED status + reason persisted, confirmed via DB).
+- User suspension: registered a throwaway candidate, suspended via `/admin/users`, confirmed `POST /api/v1/auth/login` now returns 401 with the generic "Invalid email or password" (no status-specific message leaked).
+- Metrics screen: rendered correct live counts (4 total postings, 2 live, 1 application, 3 confirmed payments, 1470 MAD revenue) — cross-checked against direct DB queries, all correct.
+- Notification failures: confirmed logged (ERROR level, full exception) rather than thrown/swallowed, both via the backend test suite and live registration attempts against the placeholder SMTP credentials.
+Docker stack torn down cleanly (`docker compose down`) after verification.
+Mid-session note: the user's internet connection dropped twice during this verification pass, which also restarted Docker Desktop (all containers on the machine, not just this project's, exited) — recovered each time by restarting Docker Desktop / `docker compose up -d` and re-confirming the API was healthy before continuing. No data or code was lost; the moderation/suspension actions taken before each drop persisted correctly in the DB.
+
 ## 2026-07-16 — PLAN: Sprint 6 (Epic 6: Application Flow)
 Batch 1 (backend 6.1): Application entity/repo, POST /api/v1/jobs/:id/apply (candidate-only, complete-profile+CV required, job must be LIVE, unique(job_posting_id, candidate_profile_id) -> 409 on duplicate).
 Batch 2 (frontend 6.1): wire existing job-detail 'ready' Apply button to the endpoint; success/already-applied UI state.
@@ -218,3 +235,32 @@ Committed and pushed commit c220f9b to origin/master (26 files: Stories 6.1-6.2,
 
 ## MILESTONE — 2026-07-16 — Sprint 6 VERIFY+SHIP closed out, CI green
 CI run 29526698821 confirmed green on commit c220f9b: backend, security, frontend, build all passed (only informational Node 20->24 deprecation warnings, non-blocking). Sprint 6 (Epic 6: Application Flow) fully shipped.
+
+## 2026-07-17 — Sprint 7 PLAN
+Batches:
+1. Moderation data model + backend (7.1): Flyway migration (REJECTED/REMOVED status, rejection_reason, moderation_actions table), entity/repo, admin moderation endpoints, tests.
+2. Suspension + metrics backend (7.2, 7.3): user status field + suspend endpoint + login/token rejection, admin metrics endpoint, tests.
+3. Async email infra (7.4): spring-boot-starter-mail, @Async executor config, EmailService/SmtpEmailService, @Scheduled expiry-soon check, plain-text templates, tests (mocked JavaMailSender).
+4. Frontend admin screens: moderation queue, user suspension, metrics dashboard + tests.
+5. VERIFY+SHIP: backend+frontend suites, live Chrome verification (email delivery itself not live-verifiable — SMTP_PASSWORD still placeholder — but async dispatch + logging verified), commit, push, CI green, sprint snapshot.
+
+## 2026-07-17 — Sprint 7 Batch 1 complete (Story 7.1: admin moderation queue)
+Flyway V4 (rejection_reason column + moderation_actions audit table), ModerationAction entity/repo, AdminModerationService (approve/reject/remove with reason required for reject, 409 if posting already outside PENDING_PAYMENT/LIVE), GET /api/v1/admin/postings + POST /api/v1/admin/postings/:id/moderate (ADMIN-only, already gated by existing SecurityConfig rule). Backend suite 70/70 green (8 new).
+
+## 2026-07-17 — Sprint 7 Batch 2 complete (Stories 7.2, 7.3)
+- 7.2: PUT /api/v1/admin/users/:id/status (AdminUserService) — suspending clears the refresh token cookie's server-side hash so refresh is rejected immediately; login already filtered ACTIVE-only from Sprint 2 so no change needed there. Reactivation tested and works.
+- 7.3: GET /api/v1/admin/metrics (AdminMetricsService) — total postings, live postings, total applications, confirmed payment count + summed MAD revenue proxy.
+- Backend suite 85/85 green (15 new: 5 suspension, 2 metrics, plus reruns).
+
+## 2026-07-17 — Sprint 7 Batch 3 complete (Story 7.4: async transactional email)
+- spring-boot-starter-mail and SMTP config were already scaffolded in Sprint 1 (pom.xml, admin.seed-style env var wiring) — only application.properties SMTP block + mail.from-address + job.expiry-notice.days-before were new.
+- notification package: EmailService interface, SmtpEmailService (JavaMailSender, @Async, catches MailException and logs at ERROR — never rethrows), AsyncConfig (@EnableAsync + @EnableScheduling, dedicated ThreadPoolTaskExecutor "email-" pool), NotificationService (4 plain-text templates: welcome, application-submitted, posting-rejected, posting-expiry-soon), JobExpiryNotifier (@Scheduled daily 08:00, Flyway V5 expiry_notice_sent_at column prevents re-notifying).
+- Triggers wired: AuthService.register(), ApplicationService.apply(), AdminModerationService.moderate() REJECT branch.
+- Backend suite 92/92 green (6 new: 2 SmtpEmailService unit tests with mocked JavaMailSender, 4 full-context trigger tests with @MockBean EmailService + Mockito.verify(timeout(...))). Real SMTP delivery still unverified end-to-end — SMTP_PASSWORD remains a placeholder pending the user generating a Gmail App Password.
+
+## 2026-07-17 — Sprint 7 Batch 4 complete (frontend admin screens)
+- Moderation queue (/admin/moderation): lists GET /api/v1/admin/postings, approve/reject(reason)/remove actions, optimistic row removal on success.
+- Manage user status (/admin/users): "by user ID" form against PUT /api/v1/admin/users/:id/status — no user-list/search endpoint exists in this sprint's backlog, so admins need the ID from elsewhere; flagged as a scope gap for a future sprint if a user directory becomes needed.
+- Platform metrics (/admin/metrics): 5-tile KPI row (loaded dataviz skill first — plain stat tiles, no color-coding needed since these are independent counts, not a series).
+- admin-home converted from ping placeholder to a real nav landing page linking to the 3 screens.
+- Frontend suite 40/40 green (9 new across 3 spec files).

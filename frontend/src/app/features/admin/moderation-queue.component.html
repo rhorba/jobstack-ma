@@ -1,0 +1,34 @@
+<div style="max-width: 720px; margin: 48px auto; padding: 0 16px;">
+  <a routerLink="/admin">&larr; Back to admin dashboard</a>
+  <h1>Moderation queue</h1>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (error()) {
+    <p style="color: var(--mat-sys-error)">{{ error() }}</p>
+  }
+
+  @if (!loading() && postings().length === 0) {
+    <p>No postings awaiting review.</p>
+  } @else {
+    @for (posting of postings(); track posting.id) {
+      <div style="border-bottom: 1px solid var(--mat-sys-outline-variant); padding: 12px 0;">
+        <p><strong>{{ posting.title }}</strong> &middot; {{ posting.status }}</p>
+        <p>{{ posting.companyName }} &middot; {{ posting.sector }} &middot; {{ posting.city }} &middot; {{ posting.contractType }}</p>
+
+        @if (rejectingId() === posting.id) {
+          <mat-form-field style="width: 100%;">
+            <mat-label>Rejection reason</mat-label>
+            <input matInput [ngModel]="reasonText()" (ngModelChange)="reasonText.set($event)" />
+          </mat-form-field>
+          <button mat-raised-button color="warn" (click)="confirmReject(posting)">Confirm reject</button>
+          <button mat-stroked-button (click)="cancelReject()">Cancel</button>
+        } @else {
+          <button mat-stroked-button (click)="approve(posting)">Approve</button>
+          <button mat-stroked-button (click)="startReject(posting)">Reject</button>
+          <button mat-stroked-button color="warn" (click)="remove(posting)">Remove</button>
+        }
+      </div>
+    }
+  }
+</div>

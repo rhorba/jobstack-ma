@@ -44,6 +44,12 @@ public class JobPosting {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
+    @Column(name = "expiry_notice_sent_at")
+    private Instant expiryNoticeSentAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -109,9 +115,30 @@ public class JobPosting {
         return expiresAt;
     }
 
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public Instant getExpiryNoticeSentAt() {
+        return expiryNoticeSentAt;
+    }
+
+    public void markExpiryNoticeSent(Instant now) {
+        this.expiryNoticeSentAt = now;
+    }
+
     public void activate(Instant now, Duration liveDuration) {
         this.status = JobStatus.LIVE;
         this.publishedAt = now;
         this.expiresAt = now.plus(liveDuration);
+    }
+
+    public void reject(String reason) {
+        this.status = JobStatus.REJECTED;
+        this.rejectionReason = reason;
+    }
+
+    public void remove() {
+        this.status = JobStatus.REMOVED;
     }
 }

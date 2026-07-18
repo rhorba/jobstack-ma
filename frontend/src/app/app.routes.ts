@@ -38,4 +38,20 @@ export const routes: Routes = [
     canActivate: [roleGuard('ADMIN')],
     loadComponent: () => import('./features/admin/admin-home.component').then((m) => m.AdminHomeComponent),
   },
+  {
+    path: 'admin/moderation',
+    canActivate: [roleGuard('ADMIN')],
+    loadComponent: () =>
+      import('./features/admin/moderation-queue.component').then((m) => m.ModerationQueueComponent),
+  },
+  {
+    path: 'admin/users',
+    canActivate: [roleGuard('ADMIN')],
+    loadComponent: () => import('./features/admin/admin-users.component').then((m) => m.AdminUsersComponent),
+  },
+  {
+    path: 'admin/metrics',
+    canActivate: [roleGuard('ADMIN')],
+    loadComponent: () => import('./features/admin/admin-metrics.component').then((m) => m.AdminMetricsComponent),
+  },
 ];

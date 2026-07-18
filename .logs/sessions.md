@@ -132,3 +132,6 @@ Completed this session:
 - Coverage tooling still not wired up — by design, Story 8.3 (Sprint 8), consistent with all prior sprints.
 - Updated the cross-session memory file (jobstack-sprint-status) to reflect Sprints 1-6 shipped.
 Next session: Start Sprint 7 (Epic 7: Admin Moderation & Notifications) — stories 7.1 (admin moderation queue), 7.2 (admin account suspension), 7.3, 7.4 (metrics, transactional email) per docs/stories-jobstack.md. If real CMI merchant docs/credentials have become available, that's the natural point to swap out MockPaymentGateway first — ask the user. Transactional email (7.4) will need new env vars (SMTP/email provider credentials) — collect those upfront per CLAUDE.md rule 10 before that story's EXECUTE phase.
+
+## SESSION_START — 2026-07-17
+Resuming JobStack.ma. Last session ended with Sprint 6 (Epic 6: Application Flow) shipped and CI-green (commit c220f9b, run 29526698821). Next up per backlog: Sprint 7 (Epic 7: Admin Moderation & Notifications) — stories 7.1-7.4. Asking user: swap MockPaymentGateway for real CMI now (still no credentials confirmed), and collecting env vars for 7.4 (transactional email) before EXECUTE.

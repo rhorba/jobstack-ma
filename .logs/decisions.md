@@ -35,3 +35,11 @@ When real CMI credentials/docs become available, MockPaymentGateway gets replace
 
 ## 2026-07-16 — BRAINSTORM: Sprint 6 approach
 Decision: single straightforward approach (no simple/balanced/comprehensive split) — follow the existing REST + Angular pattern from Epics 3-5 (entity/repo/controller/DTOs, IDOR-checked ownership, reactive Angular components). User explicitly agreed to skip a full BRAINSTORM given how clear-cut the acceptance criteria are.
+
+## 2026-07-17 — Sprint 7 kickoff decisions
+- CMI real integration still deferred: user has no merchant sandbox credentials yet, MockPaymentGateway stays in place. Revisit each sprint per standing note.
+- Story 7.4 (transactional email) will use generic SMTP via Gmail (smtp.gmail.com:587, account rrhorba.mohamed@gmail.com) rather than a provider API (SendGrid/Mailgun) or local MailHog catcher. SMTP_PASSWORD is a placeholder in .env.example — user needs to generate a Gmail App Password (2-Step Verification required) before live email sending can be verified end-to-end this sprint. Until then, email sending will be implemented and unit-tested but live-verification of actual delivery is blocked on that credential.
+
+## 2026-07-17 — Sprint 7 approach (BRAINSTORM)
+- Story 7.1 moderation model: user chose the balanced option — add REJECTED/REMOVED to the job posting status enum (with reason) AND a new `moderation_actions` audit log table (who/when/reason) recording every admin moderation action, not just a status flip. More overhead than status-only but gives a full audit trail.
+- Story 7.4 email delivery: user chose async via Spring `@Async` — email sending offloaded to a thread pool (executor config + async-context exception handling) so SMTP latency/outages never block register/apply/reject/expiry-soon request threads. Failures still logged per AC, not silently swallowed.

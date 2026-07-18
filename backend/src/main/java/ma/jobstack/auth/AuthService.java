@@ -5,6 +5,7 @@ import ma.jobstack.auth.dto.LoginRequest;
 import ma.jobstack.auth.dto.RegisterRequest;
 import ma.jobstack.candidate.CandidateProfile;
 import ma.jobstack.candidate.CandidateProfileRepository;
+import ma.jobstack.notification.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,15 @@ public class AuthService {
     private final CandidateProfileRepository candidateProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final NotificationService notificationService;
 
     public AuthService(UserRepository userRepository, CandidateProfileRepository candidateProfileRepository,
-                        PasswordEncoder passwordEncoder, JwtService jwtService) {
+                        PasswordEncoder passwordEncoder, JwtService jwtService, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.candidateProfileRepository = candidateProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -42,6 +45,7 @@ public class AuthService {
         if (request.role() == UserRole.CANDIDATE) {
             candidateProfileRepository.save(new CandidateProfile(user.getId()));
         }
+        notificationService.sendWelcomeEmail(user.getEmail());
     }
 
     public record LoginResult(AuthResponse response, String rawRefreshToken) {

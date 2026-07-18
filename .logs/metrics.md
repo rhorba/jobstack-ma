@@ -50,3 +50,12 @@ CI: green (run 29440497158, commit 2e473a3) — all 4 jobs (backend, frontend, s
 - Coverage tooling: still not wired up, per docs/stories-jobstack.md Story 8.3 (Sprint 8) — consistent with all prior sprints. Eyeballed: all tests green, no regressions.
 - Commit c220f9b pushed to origin/master; CI run 29526698821 green.
 - Live-verified via Chrome: full candidate apply flow, employer applicant dashboard + CV download, and IDOR block (second employer denied 403) all confirmed working end-to-end.
+
+## SPRINT_SNAPSHOT — Sprint 7 (Epic 7: Admin Moderation & Notifications) — 2026-07-19
+- Stories: 7.1 (moderation queue: approve/reject/remove + audit log), 7.2 (user suspension), 7.3 (platform metrics), 7.4 (async transactional email) — all done.
+- Backend tests: 83/83 green, 21 new (2 AdminMetricsTests, 8 AdminModerationTests, 5 AdminUserSuspensionTests, 4 NotificationTriggerTests, 2 SmtpEmailServiceTests).
+- Frontend tests: 40/40 green, 9 new across moderation-queue, admin-users, admin-metrics component spec files.
+- Coverage tooling: still not wired up, per docs/stories-jobstack.md Story 8.3 (Sprint 8) — consistent with all prior sprints. Eyeballed: all tests green, no regressions.
+- Live-verified via Chrome against the live docker-compose stack: moderation approve/remove (reject verified earlier in the same session), user suspension blocking login (401, generic message), metrics screen accuracy (cross-checked against DB), and email-failure logging behavior (SMTP_PASSWORD still a placeholder — logging-not-swallowing is exactly what the AC requires and is confirmed both live and by unit test).
+- Known gap carried forward (documented, not blocking): real CMI payment gateway still not integrated (MockPaymentGateway in place since Sprint 5); real SMTP delivery still unverified pending a Gmail App Password from the user.
+- Commit/CI: see activity.md PUSH entry for this sprint.

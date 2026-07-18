@@ -10,6 +10,7 @@ import ma.jobstack.employer.CompanyRepository;
 import ma.jobstack.job.JobPosting;
 import ma.jobstack.job.JobPostingRepository;
 import ma.jobstack.job.JobStatus;
+import ma.jobstack.notification.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +28,19 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
     private final CvStorageService cvStorageService;
+    private final NotificationService notificationService;
 
     public ApplicationService(JobPostingRepository jobPostingRepository, CompanyRepository companyRepository,
                                CandidateProfileRepository candidateProfileRepository, UserRepository userRepository,
-                               ApplicationRepository applicationRepository, CvStorageService cvStorageService) {
+                               ApplicationRepository applicationRepository, CvStorageService cvStorageService,
+                               NotificationService notificationService) {
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
         this.candidateProfileRepository = candidateProfileRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.cvStorageService = cvStorageService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -58,6 +62,9 @@ public class ApplicationService {
 
         Application application = new Application(posting.getId(), profile.getId());
         applicationRepository.save(application);
+
+        userRepository.findById(candidateUserId)
+                .ifPresent(user -> notificationService.sendApplicationSubmitted(user.getEmail(), posting.getTitle()));
         return application;
     }
 
