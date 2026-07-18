@@ -135,3 +135,15 @@ Next session: Start Sprint 7 (Epic 7: Admin Moderation & Notifications) — stor
 
 ## SESSION_START — 2026-07-17
 Resuming JobStack.ma. Last session ended with Sprint 6 (Epic 6: Application Flow) shipped and CI-green (commit c220f9b, run 29526698821). Next up per backlog: Sprint 7 (Epic 7: Admin Moderation & Notifications) — stories 7.1-7.4. Asking user: swap MockPaymentGateway for real CMI now (still no credentials confirmed), and collecting env vars for 7.4 (transactional email) before EXECUTE.
+
+## SESSION_END — 2026-07-19
+This closes out a session that spanned 2026-07-17 through 2026-07-19 — Sprint 7 was fully executed in the 07-17 portion (uncommitted at that point) and this final part picked up with "continue", found the uncommitted EXECUTE work, and carried it through VERIFY+SHIP.
+Completed:
+- Sprint 7 (Epic 7: Admin Moderation & Notifications) fully shipped: 7.1 moderation queue + audit log, 7.2 user suspension, 7.3 platform metrics, 7.4 async transactional email (all built in the 07-17 portion of this session, per activity.md EXECUTE entry).
+- VERIFY: backend 83/83 and frontend 40/40 tests green (Docker Desktop had to be started first — wasn't running when this part of the session began). Live-verified end-to-end via Chrome against the docker-compose stack: moderation approve/reject/remove, user suspension blocking login (401), metrics accuracy, email-failure logging.
+- SHIP: committed (26d1a7e) and pushed. CI went red once — `NotificationTriggerTests` was missing a `cv.storage.path` test override (worked on Windows locally, failed on the Linux CI runner) — root-caused, fixed, repushed (6e72e79), confirmed green (run 29665729669). Log-only commit b071ba4 also pushed and confirmed green (run 29665831776).
+- Mid-session note: the user's internet connection dropped twice during live verification, which also restarted Docker Desktop each time (all local project containers exited, not just this one) — recovered by restarting Docker Desktop and re-confirming API health before continuing. No work was lost.
+Not done / explicitly deferred: real CMI payment gateway integration (still MockPaymentGateway, no merchant credentials); real SMTP email delivery verification (SMTP_PASSWORD still a placeholder — user hasn't generated a Gmail App Password yet, but the failure-logging behavior itself is fully verified both live and by unit test).
+Next session, in order:
+1. Ask user: real CMI credentials or SMTP app password available yet? If either, that's the natural point to wire them in.
+2. Otherwise, start Sprint 8 (Epic 8: analytics wired up, adversarial findings fixed, ≥80% coverage gate introduced per Story 8.3) — this is the sprint where the coverage gate finally turns on, so expect to add tests specifically to hit 80% combined coverage, not just write tests for new features.
