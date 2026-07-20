@@ -240,7 +240,7 @@ class ApplicationFlowTests {
         MvcResult listResult = mockMvc.perform(get("/api/v1/employers/me/jobs/" + jobId + "/applicants")
                         .header("Authorization", "Bearer " + employerToken))
                 .andReturn();
-        String cvUrl = objectMapper.readTree(listResult.getResponse().getContentAsString()).get(0).get("cvDownloadUrl").asText();
+        String cvUrl = objectMapper.readTree(listResult.getResponse().getContentAsString()).get("content").get(0).get("cvDownloadUrl").asText();
 
         mockMvc.perform(get(cvUrl).header("Authorization", "Bearer " + employerToken))
                 .andExpect(status().isOk())
@@ -259,7 +259,7 @@ class ApplicationFlowTests {
         MvcResult listResult = mockMvc.perform(get("/api/v1/employers/me/jobs/" + jobId + "/applicants")
                         .header("Authorization", "Bearer " + ownerToken))
                 .andReturn();
-        String cvUrl = objectMapper.readTree(listResult.getResponse().getContentAsString()).get(0).get("cvDownloadUrl").asText();
+        String cvUrl = objectMapper.readTree(listResult.getResponse().getContentAsString()).get("content").get(0).get("cvDownloadUrl").asText();
 
         String otherEmployerToken = accessTokenForNewUser("EMPLOYER");
         mockMvc.perform(get(cvUrl).header("Authorization", "Bearer " + otherEmployerToken))
