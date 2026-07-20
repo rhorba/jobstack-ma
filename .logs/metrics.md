@@ -67,3 +67,6 @@ CI: green (run 29440497158, commit 2e473a3) — all 4 jobs (backend, frontend, s
   - With exclusions applied: found AuthService (core session/token logic) had zero dedicated test file — added auth.service.spec.ts (8 tests: register, login, refresh success/failure, restoreSession, logout, hasRole).
   - Final: Statements 89.56%, Branches 88.88%, Functions 86.45%, Lines 90.55% — all four metrics clear 80%.
   - New npm script `test:ci` runs with coverage + the threshold gate; wired into .github/workflows/ci.yml (backend job now runs `mvn verify` instead of `mvn test`; frontend job now runs `npm run test:ci`).
+
+## 2026-07-20 — Sprint 8 SPRINT_SNAPSHOT
+Epic 8 (Analytics & Hardening) shipped. Backend: 97 test methods, 95.07% line coverage (JaCoCo gate enforced at 80% in CI). Frontend: 49 tests, 90.55% line coverage (Vitest gate enforced at 80% in CI, all 4 metrics). CI green end-to-end (commits acd5183, 186d9a7 — run 29750708150).

@@ -293,3 +293,9 @@ Backend + frontend test suites re-run after changes (see next log entries for re
 - Fixed an unrelated but blocking issue found while standing up the stack: frontend had no `.dockerignore`, so `node_modules` (240MB+) was included in the nginx image's build context and tripped `archive/tar: unknown file mode` (OneDrive-synced file attributes). Added `frontend/.dockerignore` (node_modules, dist, .angular, coverage, *.log) — standard practice regardless, fixed the build.
 - Did not visually click through the Next/Previous pagination buttons live (only 2 seeded postings, not enough to reach page 2) — covered instead by backend pagination tests (JobSearchTests, ApplicationFlowTests) and frontend component tests simulating page transitions.
 - Docker stack torn down cleanly after verification.
+
+## 2026-07-20 — Sprint 8 SHIP
+- Committed (acd5183) and pushed. CI went RED on backend (`mvn verify`) — 2 NullPointerExceptions in ApplicationFlowTests CV-download tests, stale `.get(0)` assertions against the now-paginated applicant-list response, missed in the earlier sweep.
+- Root-caused, fixed, verified locally with an unpiped command this time (previous local verify runs had been silently unreliable — piping `mvn` output through `tail` masks the real exit code; see corrections.md), confirmed clean (exit 0, no ERROR lines, 95.07% line coverage).
+- Committed (186d9a7) and pushed. CI confirmed fully green (run 29750708150 — backend, frontend, security, build all passed).
+- Sprint 8 (Epic 8: Analytics & Hardening) is complete and shipped: 8.1 PostHog analytics, 8.2 adversarial fixes (payment race fix, JWT/role-tampering tests, full pagination, extended SQLi tests), 8.3 coverage gates (backend 95.07% lines / JaCoCo, frontend 90.55% lines / Vitest) both enforced in CI.
