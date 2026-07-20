@@ -1,5 +1,6 @@
 package ma.jobstack.application;
 
+import ma.jobstack.analytics.AnalyticsService;
 import ma.jobstack.auth.User;
 import ma.jobstack.auth.UserRepository;
 import ma.jobstack.candidate.CandidateProfile;
@@ -11,12 +12,14 @@ import ma.jobstack.job.JobPosting;
 import ma.jobstack.job.JobPostingRepository;
 import ma.jobstack.job.JobStatus;
 import ma.jobstack.notification.NotificationService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -29,11 +32,12 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final CvStorageService cvStorageService;
     private final NotificationService notificationService;
+    private final AnalyticsService analyticsService;
 
     public ApplicationService(JobPostingRepository jobPostingRepository, CompanyRepository companyRepository,
                                CandidateProfileRepository candidateProfileRepository, UserRepository userRepository,
                                ApplicationRepository applicationRepository, CvStorageService cvStorageService,
-                               NotificationService notificationService) {
+                               NotificationService notificationService, AnalyticsService analyticsService) {
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
         this.candidateProfileRepository = candidateProfileRepository;
@@ -41,6 +45,7 @@ public class ApplicationService {
         this.applicationRepository = applicationRepository;
         this.cvStorageService = cvStorageService;
         this.notificationService = notificationService;
+        this.analyticsService = analyticsService;
     }
 
     @Transactional
@@ -65,14 +70,16 @@ public class ApplicationService {
 
         userRepository.findById(candidateUserId)
                 .ifPresent(user -> notificationService.sendApplicationSubmitted(user.getEmail(), posting.getTitle()));
+        analyticsService.track("application_submitted", candidateUserId,
+                Map.of("job_posting_id", posting.getId().toString()));
         return application;
     }
 
-    public List<Application> listApplicants(UUID jobPostingId, UUID employerUserId) {
+    public Page<Application> listApplicants(UUID jobPostingId, UUID employerUserId, Pageable pageable) {
         JobPosting posting = jobPostingRepository.findById(jobPostingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         assertOwnedByEmployer(posting, employerUserId);
-        return applicationRepository.findByJobPostingId(jobPostingId);
+        return applicationRepository.findByJobPostingId(jobPostingId, pageable);
     }
 
     public byte[] downloadApplicantCv(UUID jobPostingId, UUID candidateProfileId, UUID employerUserId) {

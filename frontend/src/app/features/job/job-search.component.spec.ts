@@ -37,7 +37,9 @@ describe('JobSearchComponent', () => {
 
   it('loads jobs on init', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/v1/jobs').flush([job]);
+    httpMock
+      .expectOne((r) => r.url === '/api/v1/jobs')
+      .flush({ content: [job], page: 0, size: 20, totalElements: 1, totalPages: 1 });
 
     expect(component.jobs()).toEqual([job]);
     expect(component.loading()).toBe(false);
@@ -45,7 +47,7 @@ describe('JobSearchComponent', () => {
 
   it('sends filter params on search', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/v1/jobs').flush([]);
+    httpMock.expectOne((r) => r.url === '/api/v1/jobs').flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
 
     component.filters.setValue({ sector: 'automotive', city: 'Tangier', contractType: 'CDI' });
     component.search();
@@ -53,15 +55,32 @@ describe('JobSearchComponent', () => {
     const req = httpMock.expectOne(
       (r) => r.url === '/api/v1/jobs' && r.params.get('sector') === 'automotive' && r.params.get('city') === 'Tangier'
     );
-    req.flush([job]);
+    req.flush({ content: [job], page: 0, size: 20, totalElements: 1, totalPages: 1 });
     expect(component.jobs()).toEqual([job]);
   });
 
   it('surfaces a search error', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/v1/jobs').flush('boom', { status: 500, statusText: 'Server Error' });
+    httpMock.expectOne((r) => r.url === '/api/v1/jobs').flush('boom', { status: 500, statusText: 'Server Error' });
 
     expect(component.error()).toBe('Search failed, retry');
     expect(component.loading()).toBe(false);
+  });
+
+  it('requests the next page and back', () => {
+    fixture.detectChanges();
+    httpMock
+      .expectOne((r) => r.url === '/api/v1/jobs')
+      .flush({ content: [job], page: 0, size: 20, totalElements: 21, totalPages: 2 });
+
+    component.nextPage();
+    const nextReq = httpMock.expectOne((r) => r.url === '/api/v1/jobs' && r.params.get('page') === '1');
+    nextReq.flush({ content: [job], page: 1, size: 20, totalElements: 21, totalPages: 2 });
+    expect(component.page()).toBe(1);
+
+    component.previousPage();
+    const prevReq = httpMock.expectOne((r) => r.url === '/api/v1/jobs' && r.params.get('page') === '0');
+    prevReq.flush({ content: [job], page: 0, size: 20, totalElements: 21, totalPages: 2 });
+    expect(component.page()).toBe(0);
   });
 });

@@ -10,6 +10,10 @@ import ma.jobstack.job.dto.CreateJobPostingRequest;
 import ma.jobstack.job.dto.JobPostingResponse;
 import ma.jobstack.payment.PaymentService;
 import ma.jobstack.payment.dto.CheckoutResponse;
+import ma.jobstack.shared.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +34,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/jobs")
 public class JobController {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final CompanyRepository companyRepository;
     private final JobPostingRepository jobPostingRepository;
@@ -71,14 +78,26 @@ public class JobController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JobPostingResponse>> search(@RequestParam(required = false) String sector,
+    public ResponseEntity<PageResponse<JobPostingResponse>> search(@RequestParam(required = false) String sector,
                                                              @RequestParam(required = false) String city,
-                                                             @RequestParam(required = false) String contractType) {
-        List<JobPosting> results = jobPostingRepository.search(JobStatus.LIVE, sector, city, contractType);
-        Map<UUID, String> companyNames = companyNamesFor(results);
-        return ResponseEntity.ok(results.stream()
+                                                             @RequestParam(required = false) String contractType,
+                                                             @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), clampSize(size));
+        Page<JobPosting> results = jobPostingRepository.search(JobStatus.LIVE, sector, city, contractType, pageable);
+        Map<UUID, String> companyNames = companyNamesFor(results.getContent());
+        List<JobPostingResponse> content = results.getContent().stream()
                 .map(p -> toResponse(p, companyNames.get(p.getCompanyId())))
-                .toList());
+                .toList();
+        return ResponseEntity.ok(new PageResponse<>(content, results.getNumber(), results.getSize(),
+                results.getTotalElements(), results.getTotalPages()));
+    }
+
+    private static int clampSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     @GetMapping("/{id}")

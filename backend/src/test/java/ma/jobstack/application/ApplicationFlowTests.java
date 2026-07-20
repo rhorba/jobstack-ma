@@ -179,11 +179,12 @@ class ApplicationFlowTests {
         mockMvc.perform(get("/api/v1/employers/me/jobs/" + jobId + "/applicants")
                         .header("Authorization", "Bearer " + employerToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].fullName").value("Amine Test"))
-                .andExpect(jsonPath("$[0].phone").value("0600000000"))
-                .andExpect(jsonPath("$[0].email").isNotEmpty())
-                .andExpect(jsonPath("$[0].cvDownloadUrl").value(
-                        org.hamcrest.Matchers.startsWith("/api/v1/employers/me/jobs/" + jobId + "/applicants/")));
+                .andExpect(jsonPath("$.content[0].fullName").value("Amine Test"))
+                .andExpect(jsonPath("$.content[0].phone").value("0600000000"))
+                .andExpect(jsonPath("$.content[0].email").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].cvDownloadUrl").value(
+                        org.hamcrest.Matchers.startsWith("/api/v1/employers/me/jobs/" + jobId + "/applicants/")))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -205,8 +206,26 @@ class ApplicationFlowTests {
         mockMvc.perform(get("/api/v1/employers/me/jobs/" + jobId + "/applicants")
                         .header("Authorization", "Bearer " + employerToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0));
+    }
+
+    @Test
+    void listApplicants_withNegativePageOrHugeSize_handledGracefully() throws Exception {
+        String employerToken = accessTokenForNewUser("EMPLOYER");
+        String jobId = liveJobFor(employerToken);
+
+        mockMvc.perform(get("/api/v1/employers/me/jobs/" + jobId + "/applicants")
+                        .header("Authorization", "Bearer " + employerToken)
+                        .param("page", "-3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0));
+
+        mockMvc.perform(get("/api/v1/employers/me/jobs/" + jobId + "/applicants")
+                        .header("Authorization", "Bearer " + employerToken)
+                        .param("size", "999999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(100));
     }
 
     @Test

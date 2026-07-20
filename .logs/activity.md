@@ -270,3 +270,26 @@ Flyway V4 (rejection_reason column + moderation_actions audit table), Moderation
 - Platform metrics (/admin/metrics): 5-tile KPI row (loaded dataviz skill first — plain stat tiles, no color-coding needed since these are independent counts, not a series).
 - admin-home converted from ping placeholder to a real nav landing page linking to the 3 screens.
 - Frontend suite 40/40 green (9 new across 3 spec files).
+
+## 2026-07-20 — Sprint 8 PLAN
+Batch 1: Analytics (8.1) — AnalyticsService (@Async, no-op if POSTHOG_API_KEY blank), wired into registration, job-post-paid, application-submitted.
+Batch 2: Adversarial fixes pass (8.2) — full checklist from test-strategy-jobstack.md §4 (Auth/Payment Maximum, CV Upload/Job Search High).
+Batch 3: Coverage gate ≥80% (8.3) — JaCoCo (backend) + Karma coverage (frontend) wired from scratch, tests added to close gaps.
+User approved plan, starting Batch 1.
+
+## 2026-07-20 — Sprint 8 Batch 2 (adversarial fixes)
+Ran an exploration pass against all 14 items in test-strategy-jobstack.md §4. 11/14 already code+test covered. Fixed the 3 gaps:
+- Payment race (Maximum): PaymentService.checkout() had a TOCTOU gap — app-level existsByJobPostingId check wasn't atomic and a concurrent duplicate would surface as an uncaught 500 instead of 409. Fixed by saveAndFlush + catching DataIntegrityViolationException on the DB's UNIQUE(job_posting_id) constraint, translated to 409. Added a 5-thread concurrent-checkout test asserting exactly 1 success + 4 conflicts.
+- Expired JWT (Auth/Maximum): mechanism existed but untested — added AuthFlowTests.expiredToken_isRejected (crafts a validly-signed but expired token).
+- Role claim tampering (Auth/Maximum): added AuthFlowTests.roleClaimTampering_isRejected (edits role claim in payload segment, keeps original signature, confirms signature-mismatch rejection) — more explicit than the existing generic-tamper test.
+- Pagination gap (Job Search/Employer Dashboard, High): user chose "build full pagination" over a simple cap. Added PageResponse<T> DTO, paginated JobPostingRepository.search + ApplicationRepository.findByJobPostingId (page/size params, clamped: negative page -> 0, size <=0 -> default 20, size > 100 -> capped 100). Wired through JobController.search and EmployerController.listApplicants. Frontend job-search + applicant-dashboard components updated to consume PageResponse with Previous/Next paging controls.
+- SQL injection checklist item extended from sector-only to city and contractType fields (JobSearchTests) — was already safe by construction (parameterized JPQL), now explicitly tested per-field.
+Backend + frontend test suites re-run after changes (see next log entries for results).
+
+## 2026-07-20 — Sprint 8 VERIFY
+- Backend: `mvn verify` green (100 test methods incl. new ones), JaCoCo gate passes at 94.31% line coverage.
+- Frontend: `npm run test:ci` green (49/49 tests), Vitest coverage gate passes at 90.55% lines / 89.56% statements / 88.88% branches / 86.45% functions, production build succeeds.
+- Live-verified via Chrome + curl against the rebuilt docker-compose stack: job search page renders real paginated API data correctly (2 seeded postings, page/size params sent, PageResponse shape consumed without regressions); SQL-injection attempt in the sector filter confirmed live (empty result set, 200, job_postings table intact afterward); PostHog analytics no-op path confirmed silent in API logs (POSTHOG_API_KEY=disabled, no HTTP attempts, no errors).
+- Fixed an unrelated but blocking issue found while standing up the stack: frontend had no `.dockerignore`, so `node_modules` (240MB+) was included in the nginx image's build context and tripped `archive/tar: unknown file mode` (OneDrive-synced file attributes). Added `frontend/.dockerignore` (node_modules, dist, .angular, coverage, *.log) — standard practice regardless, fixed the build.
+- Did not visually click through the Next/Previous pagination buttons live (only 2 seeded postings, not enough to reach page 2) — covered instead by backend pagination tests (JobSearchTests, ApplicationFlowTests) and frontend component tests simulating page transitions.
+- Docker stack torn down cleanly after verification.

@@ -147,3 +147,6 @@ Not done / explicitly deferred: real CMI payment gateway integration (still Mock
 Next session, in order:
 1. Ask user: real CMI credentials or SMTP app password available yet? If either, that's the natural point to wire them in.
 2. Otherwise, start Sprint 8 (Epic 8: analytics wired up, adversarial findings fixed, ≥80% coverage gate introduced per Story 8.3) — this is the sprint where the coverage gate finally turns on, so expect to add tests specifically to hit 80% combined coverage, not just write tests for new features.
+
+## SESSION_START — 2026-07-20
+Resuming JobStack.ma. Last session ended with Sprint 7 (Epic 7: Admin Moderation & Notifications) shipped and CI-green (commit 26d1a7e, run 29665831776 for the log-only follow-up). Asked user re: real CMI/SMTP credentials — neither available yet. Proceeding to Sprint 8 (Epic 8: Analytics & Hardening) — stories 8.1 (PostHog event tracking), 8.2 (adversarial fixes pass), 8.3 (coverage gate to ≥80%, the gate turns on this sprint).

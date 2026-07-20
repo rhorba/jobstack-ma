@@ -43,3 +43,8 @@ Decision: single straightforward approach (no simple/balanced/comprehensive spli
 ## 2026-07-17 — Sprint 7 approach (BRAINSTORM)
 - Story 7.1 moderation model: user chose the balanced option — add REJECTED/REMOVED to the job posting status enum (with reason) AND a new `moderation_actions` audit log table (who/when/reason) recording every admin moderation action, not just a status flip. More overhead than status-only but gives a full audit trail.
 - Story 7.4 email delivery: user chose async via Spring `@Async` — email sending offloaded to a thread pool (executor config + async-context exception handling) so SMTP latency/outages never block register/apply/reject/expiry-soon request threads. Failures still logged per AC, not silently swallowed.
+
+## 2026-07-20 — Sprint 8 approach
+- Story 8.1 (PostHog): simple direct-HTTP approach chosen over the posthog-java SDK — small @Async AnalyticsService posting to PostHog's /capture/ REST endpoint, no new Maven dependency, no-ops cleanly when POSTHOG_API_KEY is blank (user has no PostHog account yet; placeholder env vars only this sprint).
+- Story 8.2 (adversarial): work the checklist in test-strategy-jobstack.md §4 directly — Auth/Payment (Maximum) first, then CV Upload/Job Search (High).
+- Story 8.3 (coverage gate): neither backend (Maven) nor frontend (Angular/Karma) has coverage tooling wired up yet — JaCoCo + Karma coverage both need to be added from scratch this sprint, then tests added to reach 80% combined.

@@ -16,5 +16,13 @@
         <button mat-stroked-button (click)="downloadCv(applicant)">Download CV</button>
       </div>
     }
+
+    @if (totalPages() > 1) {
+      <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
+        <button mat-button type="button" [disabled]="page() === 0" (click)="previousPage()">Previous</button>
+        <span>Page {{ page() + 1 }} of {{ totalPages() }} ({{ totalElements() }} applicants)</span>
+        <button mat-button type="button" [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Next</button>
+      </div>
+    }
   }
 </div>

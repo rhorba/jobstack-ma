@@ -1,9 +1,12 @@
 package ma.jobstack.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import ma.jobstack.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -11,6 +14,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -30,6 +39,9 @@ class AuthFlowTests {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     private String uniqueEmail() {
         return "user-" + UUID.randomUUID() + "@jobstack.ma";
@@ -182,6 +194,43 @@ class AuthFlowTests {
         String token = accessToken(login(email, password));
 
         mockMvc.perform(get("/api/v1/candidates/me").header("Authorization", "Bearer " + token + "tampered"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void expiredToken_isRejected() throws Exception {
+        SecretKey signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        Instant now = Instant.now();
+        String expiredToken = Jwts.builder()
+                .subject(UUID.randomUUID().toString())
+                .claim("email", uniqueEmail())
+                .claim("role", "CANDIDATE")
+                .issuedAt(Date.from(now.minus(1, ChronoUnit.HOURS)))
+                .expiration(Date.from(now.minus(1, ChronoUnit.MINUTES)))
+                .signWith(signingKey)
+                .compact();
+
+        mockMvc.perform(get("/api/v1/candidates/me").header("Authorization", "Bearer " + expiredToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void roleClaimTampering_isRejected() throws Exception {
+        String email = uniqueEmail();
+        String password = registerAndLogin(email, "CANDIDATE");
+        String token = accessToken(login(email, password));
+
+        // Attacker edits the "role" claim in the (unsigned-by-them) payload segment without the signing key,
+        // then re-attaches the original signature — signature verification must catch the mismatch.
+        String[] parts = token.split("\\.");
+        String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+        String tamperedPayloadJson = payloadJson.replace("\"role\":\"CANDIDATE\"", "\"role\":\"ADMIN\"");
+        assertThat(tamperedPayloadJson).isNotEqualTo(payloadJson); // guard: replacement actually happened
+        String tamperedPayload = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(tamperedPayloadJson.getBytes(StandardCharsets.UTF_8));
+        String tamperedToken = parts[0] + "." + tamperedPayload + "." + parts[2];
+
+        mockMvc.perform(get("/api/v1/employers/me").header("Authorization", "Bearer " + tamperedToken))
                 .andExpect(status().isForbidden());
     }
 }

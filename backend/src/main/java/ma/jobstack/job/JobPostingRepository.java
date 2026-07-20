@@ -1,5 +1,7 @@
 package ma.jobstack.job;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,13 +22,21 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, UUID> {
     List<JobPosting> findByStatusAndExpiresAtBetweenAndExpiryNoticeSentAtIsNull(
             JobStatus status, Instant from, Instant to);
 
-    @Query("""
+    @Query(value = """
             SELECT p FROM JobPosting p
             WHERE p.status = :status
               AND (:sector IS NULL OR p.sector = :sector)
               AND (:city IS NULL OR p.city = :city)
               AND (:contractType IS NULL OR p.contractType = :contractType)
+            """,
+            countQuery = """
+            SELECT count(p) FROM JobPosting p
+            WHERE p.status = :status
+              AND (:sector IS NULL OR p.sector = :sector)
+              AND (:city IS NULL OR p.city = :city)
+              AND (:contractType IS NULL OR p.contractType = :contractType)
             """)
-    List<JobPosting> search(@Param("status") JobStatus status, @Param("sector") String sector,
-                             @Param("city") String city, @Param("contractType") String contractType);
+    Page<JobPosting> search(@Param("status") JobStatus status, @Param("sector") String sector,
+                             @Param("city") String city, @Param("contractType") String contractType,
+                             Pageable pageable);
 }

@@ -45,7 +45,9 @@ describe('ApplicantDashboardComponent', () => {
 
   it('loads and displays the applicant list', () => {
     fixture.detectChanges();
-    httpMock.expectOne(`/api/v1/employers/me/jobs/${jobId}/applicants`).flush(applicants);
+    httpMock
+      .expectOne((r) => r.url === `/api/v1/employers/me/jobs/${jobId}/applicants`)
+      .flush({ content: applicants, page: 0, size: 20, totalElements: 1, totalPages: 1 });
 
     expect(component.applicants()).toEqual(applicants);
     expect(component.loading()).toBe(false);
@@ -53,7 +55,9 @@ describe('ApplicantDashboardComponent', () => {
 
   it('shows an empty state when there are no applicants', () => {
     fixture.detectChanges();
-    httpMock.expectOne(`/api/v1/employers/me/jobs/${jobId}/applicants`).flush([]);
+    httpMock
+      .expectOne((r) => r.url === `/api/v1/employers/me/jobs/${jobId}/applicants`)
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
 
     expect(component.applicants()).toEqual([]);
   });
@@ -61,7 +65,7 @@ describe('ApplicantDashboardComponent', () => {
   it('surfaces an error when the list fails to load (e.g. IDOR block)', () => {
     fixture.detectChanges();
     httpMock
-      .expectOne(`/api/v1/employers/me/jobs/${jobId}/applicants`)
+      .expectOne((r) => r.url === `/api/v1/employers/me/jobs/${jobId}/applicants`)
       .flush('forbidden', { status: 403, statusText: 'Forbidden' });
 
     expect(component.error()).toBe('Could not load applicants for this job posting.');

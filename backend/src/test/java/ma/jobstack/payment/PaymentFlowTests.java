@@ -136,6 +136,32 @@ class PaymentFlowTests {
     }
 
     @Test
+    void checkout_concurrentAttempts_onlyOneSucceeds_noDoubleConfirmedPayment() throws Exception {
+        String token = accessTokenForNewEmployer();
+        String jobId = draftJobFor(token);
+
+        int attempts = 5;
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(attempts);
+        java.util.List<java.util.concurrent.Future<Integer>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < attempts; i++) {
+            futures.add(pool.submit(() -> mockMvc.perform(post("/api/v1/jobs/" + jobId + "/checkout")
+                            .header("Authorization", "Bearer " + token))
+                    .andReturn().getResponse().getStatus()));
+        }
+        long okCount = 0;
+        long conflictCount = 0;
+        for (var future : futures) {
+            int status = future.get();
+            if (status == 200) okCount++;
+            else if (status == 409) conflictCount++;
+        }
+        pool.shutdown();
+
+        org.assertj.core.api.Assertions.assertThat(okCount).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(conflictCount).isEqualTo(attempts - 1);
+    }
+
+    @Test
     void checkout_byNonOwningEmployer_returns403() throws Exception {
         String ownerToken = accessTokenForNewEmployer();
         String jobId = draftJobFor(ownerToken);

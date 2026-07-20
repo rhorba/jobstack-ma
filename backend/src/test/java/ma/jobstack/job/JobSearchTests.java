@@ -84,8 +84,8 @@ class JobSearchTests {
 
         mockMvc.perform(get("/api/v1/jobs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.title=='" + uniqueTitle + "')]").exists())
-                .andExpect(jsonPath("$[?(@.title=='" + draftTitle + "')]").doesNotExist());
+                .andExpect(jsonPath("$.content[?(@.title=='" + uniqueTitle + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.title=='" + draftTitle + "')]").doesNotExist());
     }
 
     @Test
@@ -101,19 +101,67 @@ class JobSearchTests {
                         .param("city", "Casablanca")
                         .param("contractType", "CDD"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.title=='" + matchTitle + "')]").exists())
-                .andExpect(jsonPath("$[?(@.title=='" + noMatchTitle + "')]").doesNotExist());
+                .andExpect(jsonPath("$.content[?(@.title=='" + matchTitle + "')]").exists())
+                .andExpect(jsonPath("$.content[?(@.title=='" + noMatchTitle + "')]").doesNotExist());
     }
 
     @Test
-    void search_withSqlInjectionAttemptInFilter_isSafelyParameterizedAndReturnsNoMatches() throws Exception {
+    void search_withSqlInjectionAttemptInSectorFilter_isSafelyParameterizedAndReturnsNoMatches() throws Exception {
         mockMvc.perform(get("/api/v1/jobs").param("sector", "automotive'; DROP TABLE job_postings; --"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
 
         // table still intact and queryable afterwards
         mockMvc.perform(get("/api/v1/jobs"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void search_withSqlInjectionAttemptInCityFilter_isSafelyParameterizedAndReturnsNoMatches() throws Exception {
+        mockMvc.perform(get("/api/v1/jobs").param("city", "Tangier' OR '1'='1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        mockMvc.perform(get("/api/v1/jobs"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void search_withSqlInjectionAttemptInContractTypeFilter_isSafelyParameterizedAndReturnsNoMatches() throws Exception {
+        mockMvc.perform(get("/api/v1/jobs").param("contractType", "CDI'; DROP TABLE job_postings; --"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        mockMvc.perform(get("/api/v1/jobs"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void search_withNegativePage_gracefullyClampsToFirstPage() throws Exception {
+        UUID companyId = companyForNewEmployer();
+        String uniqueTitle = "NegPage-" + UUID.randomUUID();
+        liveJob(companyId, uniqueTitle, "automotive", "Tangier", "CDI");
+
+        mockMvc.perform(get("/api/v1/jobs").param("page", "-5").param("sector", "automotive"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.content[?(@.title=='" + uniqueTitle + "')]").exists());
+    }
+
+    @Test
+    void search_withHugePageSize_isClampedToMax() throws Exception {
+        mockMvc.perform(get("/api/v1/jobs").param("size", "999999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(100));
+    }
+
+    @Test
+    void search_withZeroOrNegativeSize_fallsBackToDefault() throws Exception {
+        mockMvc.perform(get("/api/v1/jobs").param("size", "-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(20));
     }
 
     @Test

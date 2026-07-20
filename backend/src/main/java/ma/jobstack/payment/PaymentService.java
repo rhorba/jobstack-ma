@@ -1,5 +1,6 @@
 package ma.jobstack.payment;
 
+import ma.jobstack.analytics.AnalyticsService;
 import ma.jobstack.employer.Company;
 import ma.jobstack.employer.CompanyRepository;
 import ma.jobstack.job.JobPosting;
@@ -9,6 +10,7 @@ import ma.jobstack.payment.gateway.CheckoutSession;
 import ma.jobstack.payment.gateway.PaymentGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -30,13 +33,16 @@ public class PaymentService {
     private final CompanyRepository companyRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentGateway paymentGateway;
+    private final AnalyticsService analyticsService;
 
     public PaymentService(JobPostingRepository jobPostingRepository, CompanyRepository companyRepository,
-                           PaymentRepository paymentRepository, PaymentGateway paymentGateway) {
+                           PaymentRepository paymentRepository, PaymentGateway paymentGateway,
+                           AnalyticsService analyticsService) {
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
         this.paymentRepository = paymentRepository;
         this.paymentGateway = paymentGateway;
+        this.analyticsService = analyticsService;
     }
 
     public record CheckoutResult(UUID paymentId, String transactionId, String redirectUrl, BigDecimal amount) {
@@ -56,7 +62,13 @@ public class PaymentService {
         }
 
         Payment payment = new Payment(jobPostingId, null, POSTING_PRICE_MAD);
-        paymentRepository.save(payment);
+        try {
+            // flush immediately so a concurrent duplicate checkout hits the DB's UNIQUE(job_posting_id)
+            // constraint here, inside this method, rather than surfacing as an uncaught 500 at commit time.
+            paymentRepository.saveAndFlush(payment);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Checkout already started for this job posting");
+        }
 
         CheckoutSession session = paymentGateway.initiateCheckout(payment.getId(), POSTING_PRICE_MAD);
         payment.setCmiTransactionId(session.transactionId());
@@ -109,6 +121,9 @@ public class PaymentService {
             payment.setConfirmedAt(Instant.now());
             posting.activate(Instant.now(), LIVE_DURATION);
             jobPostingRepository.save(posting);
+            companyRepository.findById(posting.getCompanyId()).ifPresent(company -> analyticsService.track(
+                    "job_post_paid", company.getOwnerUserId(),
+                    Map.of("job_posting_id", posting.getId().toString(), "amount_mad", payment.getAmountMad().toString())));
         } else {
             payment.setStatus(PaymentStatus.FAILED);
         }

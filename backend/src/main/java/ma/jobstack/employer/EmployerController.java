@@ -9,6 +9,10 @@ import ma.jobstack.auth.User;
 import ma.jobstack.auth.UserRepository;
 import ma.jobstack.employer.dto.CompanyResponse;
 import ma.jobstack.employer.dto.CreateCompanyRequest;
+import ma.jobstack.shared.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,6 +32,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/employers")
 public class EmployerController {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
@@ -65,17 +73,28 @@ public class EmployerController {
     }
 
     @GetMapping("/me/jobs/{jobId}/applicants")
-    public ResponseEntity<List<ApplicantResponse>> listApplicants(@AuthenticationPrincipal UUID userId,
-                                                                     @PathVariable UUID jobId) {
-        List<Application> applications = applicationService.listApplicants(jobId, userId);
-        List<ApplicantResponse> response = applications.stream().map(a -> {
+    public ResponseEntity<PageResponse<ApplicantResponse>> listApplicants(@AuthenticationPrincipal UUID userId,
+                                                                     @PathVariable UUID jobId,
+                                                                     @RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), clampSize(size));
+        Page<Application> applications = applicationService.listApplicants(jobId, userId, pageable);
+        List<ApplicantResponse> content = applications.getContent().stream().map(a -> {
             CandidateProfile profile = applicationService.findProfile(a.getCandidateProfileId());
             User candidateUser = applicationService.findUser(profile.getUserId());
             String cvUrl = "/api/v1/employers/me/jobs/" + jobId + "/applicants/" + profile.getId() + "/cv";
             return new ApplicantResponse(a.getId().toString(), profile.getFullName(), candidateUser.getEmail(),
                     profile.getPhone(), cvUrl);
         }).toList();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new PageResponse<>(content, applications.getNumber(), applications.getSize(),
+                applications.getTotalElements(), applications.getTotalPages()));
+    }
+
+    private static int clampSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     @GetMapping("/me/jobs/{jobId}/applicants/{candidateProfileId}/cv")

@@ -1,5 +1,6 @@
 package ma.jobstack.auth;
 
+import ma.jobstack.analytics.AnalyticsService;
 import ma.jobstack.auth.dto.AuthResponse;
 import ma.jobstack.auth.dto.LoginRequest;
 import ma.jobstack.auth.dto.RegisterRequest;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -22,14 +24,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final NotificationService notificationService;
+    private final AnalyticsService analyticsService;
 
     public AuthService(UserRepository userRepository, CandidateProfileRepository candidateProfileRepository,
-                        PasswordEncoder passwordEncoder, JwtService jwtService, NotificationService notificationService) {
+                        PasswordEncoder passwordEncoder, JwtService jwtService, NotificationService notificationService,
+                        AnalyticsService analyticsService) {
         this.userRepository = userRepository;
         this.candidateProfileRepository = candidateProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.notificationService = notificationService;
+        this.analyticsService = analyticsService;
     }
 
     @Transactional
@@ -46,6 +51,7 @@ public class AuthService {
             candidateProfileRepository.save(new CandidateProfile(user.getId()));
         }
         notificationService.sendWelcomeEmail(user.getEmail());
+        analyticsService.track("registration", user.getId(), Map.of("role", user.getRole().name()));
     }
 
     public record LoginResult(AuthResponse response, String rawRefreshToken) {
