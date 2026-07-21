@@ -48,3 +48,6 @@ Decision: single straightforward approach (no simple/balanced/comprehensive spli
 - Story 8.1 (PostHog): simple direct-HTTP approach chosen over the posthog-java SDK — small @Async AnalyticsService posting to PostHog's /capture/ REST endpoint, no new Maven dependency, no-ops cleanly when POSTHOG_API_KEY is blank (user has no PostHog account yet; placeholder env vars only this sprint).
 - Story 8.2 (adversarial): work the checklist in test-strategy-jobstack.md §4 directly — Auth/Payment (Maximum) first, then CV Upload/Job Search (High).
 - Story 8.3 (coverage gate): neither backend (Maven) nor frontend (Angular/Karma) has coverage tooling wired up yet — JaCoCo + Karma coverage both need to be added from scratch this sprint, then tests added to reach 80% combined.
+
+## 2026-07-21 — Sprint 9 (Story 9.1) TLS approach
+Chose: self-signed cert generated for the prod nginx image + HSTS + HTTP->HTTPS redirect, fully configured and testable now; README documents swapping in a real CA/Let's Encrypt cert once a real domain/hosting exists. Rejected Caddy+ACME (no real domain yet to issue against) and "assume upstream LB terminates TLS" (doesn't satisfy 9.1's literal acceptance criteria within this repo). No new env vars needed.

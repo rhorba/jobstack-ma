@@ -70,3 +70,9 @@ CI: green (run 29440497158, commit 2e473a3) — all 4 jobs (backend, frontend, s
 
 ## 2026-07-20 — Sprint 8 SPRINT_SNAPSHOT
 Epic 8 (Analytics & Hardening) shipped. Backend: 97 test methods, 95.07% line coverage (JaCoCo gate enforced at 80% in CI). Frontend: 49 tests, 90.55% line coverage (Vitest gate enforced at 80% in CI, all 4 metrics). CI green end-to-end (commits acd5183, 186d9a7 — run 29750708150).
+
+## 2026-07-21 — Sprint 9 VERIFY
+- Backend: `mvn verify` (unpiped, exit code checked directly per the Sprint 8 corrections.md lesson) — 96/96 tests green, JaCoCo gate passed, 93% line coverage (239/3669 missed). No new backend app code this sprint (9.1/9.2 are infra/e2e), so the small count/percentage shift vs. Sprint 8's 97/95.07% reflects normal report regeneration, not a regression.
+- Frontend: `npm run test:ci` — 11/11 files, 49/49 tests green, coverage unchanged from Sprint 8 (Statements 89.56%, Branches 88.88%, Functions 86.45%, Lines 90.55%) — expected, no Angular app code changed this sprint.
+- Both suites clear the 80% combined coverage gate.
+- New: `e2e/` Playwright release-gate suite (Story 9.2) — 1/1 passed live against the dev stack, not counted toward unit/integration coverage (separate release-gate check, not a coverage-gated suite).

@@ -1,0 +1,53 @@
+name: jobstack-prod
+
+services:
+  nginx:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "80:8080"
+      - "443:8443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-jobstack.local}
+    volumes:
+      - certs:/etc/nginx/certs
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api
+
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+    volumes:
+      - cvdata:/data/cvs
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME must be set in .env}
+      POSTGRES_USER: ${DB_USER:?DB_USER must be set in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?DB_USER must be set in .env}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  cvdata:
+  certs:

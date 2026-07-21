@@ -165,3 +165,6 @@ Completed this session:
 Next session, in order:
 1. Ask user: real CMI merchant credentials or Gmail SMTP App Password available yet? If either, that's the natural point to wire them in before continuing.
 2. Otherwise, start Sprint 9 (Epic 9: Production Readiness & Release) — stories 9.1 (production docker-compose hardening: TLS/HSTS, non-root containers, host-only secrets) and 9.2 (final release E2E + video recording, the only sprint where CLAUDE.md's video-recording rule actually applies per the user's earlier "final sprint only" decision logged in test-strategy-jobstack.md §5). This is the last planned sprint before MVP ships.
+
+## SESSION_START — 2026-07-21
+Resuming JobStack.ma. Last session ended with Sprint 8 (Epic 8: Analytics & Hardening) shipped and CI-green (commit 186d9a7, run 29750708150). Asked user re: real CMI/SMTP credentials — neither available yet. Starting Sprint 9 (Epic 9: Production Readiness & Release, final sprint) — stories 9.1 (prod docker-compose hardening: TLS/HSTS, non-root containers, host-only secrets) and 9.2 (final release E2E + video recording).

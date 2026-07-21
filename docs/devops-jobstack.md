@@ -149,3 +149,15 @@ Full metrics/alerting stack (Prometheus/Grafana) deferred — YAGNI at single-ho
 
 ## CI Monitoring Protocol
 Per CLAUDE.md rule 11: after every push, watch `gh run watch` to completion. Green → log to `.logs/activity.md`. Red → diagnose, fix, push again, log each iteration to `.logs/issues.md`. No SHIP phase begins on red CI.
+
+## 7. Production Deployment (Sprint 9, Story 9.1)
+
+`docker-compose.prod.yml` is the hardened production stack, distinct from the dev-only `docker-compose.yml`:
+
+- **TLS/HSTS**: `nginx` is built from `frontend/Dockerfile.prod` (base image `nginxinc/nginx-unprivileged`) with `frontend/nginx.prod.conf` — port 8080 redirects to 8443, 8443 serves HTTPS with `Strict-Transport-Security` set. Host ports 80/443 map to the container's unprivileged 8080/8443.
+- **Cert bootstrap**: `frontend/docker-entrypoint-tls.sh` generates a self-signed cert into the `certs` volume on first boot (CN from `APP_DOMAIN`, default `jobstack.local`) if no cert is present yet. This is intentional for now — **no real domain/hosting is provisioned yet** (decision logged in `.logs/decisions.md`, 2026-07-21).
+- **Swapping in a real cert later**: once a real domain + CA cert (e.g. Let's Encrypt) exist, drop `server.crt`/`server.key` into the `certs` named volume (or bind-mount a host directory over it in a compose override) — the entrypoint script only generates a cert when one isn't already present, so a real cert is never overwritten.
+- **Non-root containers**: `api` already ran as `app` (backend/Dockerfile); `db` runs as `postgres` (upstream image default); `nginx` now runs as `nginx` (uid 101, via `nginx-unprivileged`) instead of root.
+- **Secrets**: `db` env vars use `${VAR:?...}` in `docker-compose.prod.yml` so the stack refuses to start without a real host `.env` — no `changeme`-style fallback defaults like the dev compose file has.
+- **Hardening flags**: `security_opt: no-new-privileges:true` on all three services.
+- **Project isolation**: `docker-compose.prod.yml` sets top-level `name: jobstack-prod`. Without it, both compose files default to the same project name (the repo directory) and the same service name (`nginx`), so they'd build to the identical image tag `jobstack-ma-nginx` and silently clobber each other's image — `docker compose up -d` on the dev file would then run the last-built image regardless of which compose file built it. This was caught live during Sprint 9 verification (dev stack came up but port 8090 got nothing, because the container running was actually the prod TLS image listening on 8080/8443 internally). The `name:` override also gives prod its own volumes (`jobstack-prod_*`), so prod data never shares the dev `pgdata`/`cvdata` volumes.
