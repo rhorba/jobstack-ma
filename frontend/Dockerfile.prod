@@ -7,7 +7,8 @@ RUN npx ng build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 USER root
-RUN apk add --no-cache openssl \
+RUN apk upgrade --no-cache \
+    && apk add --no-cache openssl \
     && mkdir -p /etc/nginx/certs \
     && chown nginx:nginx /etc/nginx/certs
 COPY --from=builder --chown=nginx:nginx /app/dist/frontend/browser /usr/share/nginx/html
